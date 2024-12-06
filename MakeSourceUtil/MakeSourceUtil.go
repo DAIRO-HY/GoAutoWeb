@@ -22,11 +22,13 @@ func Make() {
 	autoWebCode := ""
 	for _, pathBean := range ReadPathUtil.PathList {
 		autoWebCode += `
-	http.HandleFunc("` + pathBean.Path + `", func(writer http.ResponseWriter, request *http.Request) {` +
-			ReadInterceptorUtil.MappingPre(pathBean.Path) +
+	http.HandleFunc("` + pathBean.Path + `", func(writer http.ResponseWriter, request *http.Request) {
+` +
+			ReadInterceptorUtil.MappingPre(pathBean.Path) + //执行前拦截器
 			pathBean.GetControllerParamSource() + // 获取Controller参数部分的代码
 			pathBean.GetCallMethodSource() + // 生成调用函数部分的代码
-			`
+			ReadInterceptorUtil.MappingAfter(pathBean.Path) + //执行前拦截器
+			`		writeToResponse(writer, body)
 	})`
 	}
 	autoWebSample := FileUtil.ReadText("./AutoWeb.go")

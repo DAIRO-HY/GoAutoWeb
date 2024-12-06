@@ -59,7 +59,7 @@ func (mine *PathBean) GetControllerParamSource() string {
 		}
 	}
 	if len(source) > 0 {
-		source = "\n\t\tparamMap := makeParamMap(request)" + source
+		source = "\t\tparamMap := makeParamMap(request)" + source + "\n"
 	}
 	return source
 }
@@ -84,12 +84,14 @@ func (mine *PathBean) GetCallMethodSource() string {
 		methodParamSource = methodParamSource[:len(methodParamSource)-2]
 	}
 
-	//函数调用部分的代码
-	source := mine.GetNickImport() + "." + mine.FuncName + "(" + methodParamSource + ")"
+	//调用Controller代码
+	callMethodSource := mine.GetNickImport() + "." + mine.FuncName + "(" + methodParamSource + ")"
+
+	source := "\t\tvar body any = nil\n"
 	if len(mine.ReturnType) > 0 { //如果有返回值
-		source = "body := " + source
-		source += "\n\t\twriteToResponse(writer, body)"
+		source += "\t\tbody = " + callMethodSource
+	} else {
+		source += "\t\t" + callMethodSource
 	}
-	source = "\n\t\t" + source
-	return source
+	return source + "\n"
 }

@@ -68,19 +68,19 @@ func readPath(line string) *bean.PathBean {
 
 	//标记改行是否有路由标记
 	var pathBean *bean.PathBean
-	if strings.HasPrefix(trimLine, "//POST:") {
+	if strings.HasPrefix(trimLine, "//post:") {
 		pathBean = &bean.PathBean{
-			Method: "POST",
+			Method: "post",
 			Path:   trimLine[7:],
 		}
-	} else if strings.HasPrefix(trimLine, "//GET:") {
+	} else if strings.HasPrefix(trimLine, "//get:") {
 		pathBean = &bean.PathBean{
-			Method: "GET",
+			Method: "get",
 			Path:   trimLine[6:],
 		}
-	} else if strings.HasPrefix(trimLine, "//REQUEST:") {
+	} else if strings.HasPrefix(trimLine, "//request:") {
 		pathBean = &bean.PathBean{
-			Method: "REQUEST",
+			Method: "request",
 			Path:   trimLine[10:],
 		}
 	}
