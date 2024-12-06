@@ -1,5 +1,7 @@
 package bean
 
+import "strings"
+
 // Controller路由信息
 type PathBean struct {
 
@@ -20,4 +22,74 @@ type PathBean struct {
 
 	//该路由的参数
 	Parameters []ParamBean
+}
+
+// 获取导入昵称
+func (mine *PathBean) GetNickImport() string {
+	if len(mine.PackagePath) == 0 {
+		return ""
+	}
+	nick := strings.ReplaceAll(mine.PackagePath, "/", "")
+	nick = strings.ReplaceAll(nick, "_", "")
+	return nick
+}
+
+// 获取Controller参数部分的代码
+func (mine *PathBean) GetControllerParamSource() string {
+	source := ""
+	for _, parameter := range mine.Parameters {
+		if parameter.VarType == "http.ResponseWriter" { //这不是一个URL参数
+			continue
+		}
+		if parameter.VarType == "*http.Request" { //这不是一个URL参数
+			continue
+		}
+		if parameter.VarType == "string" { //字符串类型
+			source += "\n\t\t" + parameter.Name + " := getString(paramMap, \"" + parameter.Name + "\")"
+		} else if parameter.VarType == "int" {
+			source += "\n\t\t" + parameter.Name + " := getInt(paramMap, \"" + parameter.Name + "\")"
+		} else if parameter.VarType == "int64" {
+			source += "\n\t\t" + parameter.Name + " := getInt64(paramMap, \"" + parameter.Name + "\")"
+		} else if parameter.VarType == "float32" {
+			source += "\n\t\t" + parameter.Name + " := getFloat32(paramMap, \"" + parameter.Name + "\")"
+		} else if parameter.VarType == "float64" {
+			source += "\n\t\t" + parameter.Name + " := getFloat64(paramMap, \"" + parameter.Name + "\")"
+		} else if strings.HasSuffix(parameter.VarType, "Form") { //这是一个结构体Form表单
+			source += "\n\t\t" + parameter.Name + " := getForm[" + parameter.GetNickImport() + "." + parameter.VarType + "](paramMap)"
+		}
+	}
+	if len(source) > 0 {
+		source = "\n\t\tparamMap := makeParamMap(request)" + source
+	}
+	return source
+}
+
+// 生成调用函数部分的代码
+func (mine *PathBean) GetCallMethodSource() string {
+
+	//函数参数部分的代码
+	methodParamSource := ""
+	for _, parameter := range mine.Parameters { //传递参数
+		if parameter.VarType == "http.ResponseWriter" {
+			methodParamSource += "writer, "
+			continue
+		}
+		if parameter.VarType == "*http.Request" {
+			methodParamSource += "request, "
+			continue
+		}
+		methodParamSource += parameter.Name + ", "
+	}
+	if len(methodParamSource) > 0 {
+		methodParamSource = methodParamSource[:len(methodParamSource)-2]
+	}
+
+	//函数调用部分的代码
+	source := mine.GetNickImport() + "." + mine.FuncName + "(" + methodParamSource + ")"
+	if len(mine.ReturnType) > 0 { //如果有返回值
+		source = "body := " + source
+		source += "\n\t\twriteToResponse(writer, body)"
+	}
+	source = "\n\t\t" + source
+	return source
 }

@@ -3,93 +3,74 @@ package MakeSourceUtil
 import (
 	"GoAutoController/Application"
 	"GoAutoController/FileUtil"
+	"GoAutoController/ReadInterceptorUtil"
 	"GoAutoController/ReadPathUtil"
-	"GoAutoController/bean"
+	"sort"
 	"strings"
 )
 
-func Start() {
-	goFileList := FileUtil.GetGoFile(Application.RootProject)
+func init() {
 
-	var pathList []bean.PathBean
-	for _, fPath := range goFileList {
+	//初始化读取路由列表
+	ReadPathUtil.Make()
 
-		// 读取go文件里的路由配置
-		list := MakeSourceUtil.ReadControllerPath(fPath)
-		pathList = append(pathList[:], list[:]...)
-	}
+	//初始化读取拦截器列表
+	ReadInterceptorUtil.Make()
+}
 
+func Make() {
 	autoWebCode := ""
-	for _, pathBean := range pathList {
-
-		//生成获取参数部分的代码
-		getParamSource := makeGetParamSource(pathBean.Parameters)
-
-		// 生成调用函数部分的代码
-		callMethodSource := makeCallMethodSource(pathBean)
-
+	for _, pathBean := range ReadPathUtil.PathList {
 		autoWebCode += `
-	http.HandleFunc("` + pathBean.Path + `", func(writer http.ResponseWriter, request *http.Request) {` + getParamSource + callMethodSource + `
+	http.HandleFunc("` + pathBean.Path + `", func(writer http.ResponseWriter, request *http.Request) {` +
+			ReadInterceptorUtil.MappingPre(pathBean.Path) +
+			pathBean.GetControllerParamSource() + // 获取Controller参数部分的代码
+			pathBean.GetCallMethodSource() + // 生成调用函数部分的代码
+			`
 	})`
 	}
-
 	autoWebSample := FileUtil.ReadText("./AutoWeb.go")
 	autoWebCode = strings.ReplaceAll(autoWebSample, "//{BODY}", autoWebCode)
+	autoWebCode = strings.ReplaceAll(autoWebCode, "//{IMPORT}", makeImportSource())
 	FileUtil.WriteText(Application.RootProject+"/AutoWeb.go", autoWebCode)
 }
 
-// 生成获取参数部分的代码
-func makeGetParamSource(parameters []bean.ParamBean) string {
-	source := ""
-	for _, parameter := range parameters {
-		if parameter.VarType == "http.ResponseWriter" {
-			continue
-		}
-		if parameter.VarType == "*http.Request" {
-			continue
-		}
-		if parameter.VarType == "string" { //字符串类型
-			source += "\n\t\t" + parameter.Name + " := query.Get(\"" + parameter.Name + "\")"
-		} else if parameter.VarType == "int" {
-			source += "\n\t\t" + parameter.Name + ",_ := strconv.Atoi(query.Get(\"" + parameter.Name + "\"))"
-		} else if parameter.VarType == "int64" {
-			source += "\n\t\t" + parameter.Name + ",_ := strconv.ParseInt(query.Get(\"" + parameter.Name + "\"),10,64)"
-		} else if parameter.VarType == "float32" {
-			source += "\n\t\t" + parameter.Name + "_64,_ := strconv.ParseFloat(query.Get(\"" + parameter.Name + "\"),32)"
-			source += "\n\t\t" + parameter.Name + " := float32(" + parameter.Name + "_64)"
-		} else if parameter.VarType == "float64" {
-			source += "\n\t\t" + parameter.Name + ",_ := strconv.ParseFloat(query.Get(\"" + parameter.Name + "\"),64)"
-		} else if strings.HasSuffix(parameter.VarType, "Form") { //这是一个结构体Form表单
-			source += "\n\t\t" + parameter.Name + " := getForm[" + parameter.VarType + "](request)"
-		}
-	}
-	if len(source) > 0 {
-		source = "\n\t\tquery := request.URL.Query()" + source
-	}
-	return source
-}
+// 生成导入包的代码
+func makeImportSource() string {
 
-// 生成调用函数部分的代码
-func makeCallMethodSource(pathBean bean.PathBean) string {
-	source := pathBean.FuncName + "("
-	for _, parameter := range pathBean.Parameters { //传递参数
-		if parameter.VarType == "http.ResponseWriter" {
-			source += "writer, "
-			continue
-		}
-		if parameter.VarType == "*http.Request" {
-			source += "request, "
-			continue
-		}
-		source += parameter.Name + ", "
-	}
-	source = source[:len(source)-2]
-	source += ")"
+	//读取项目的模块名
+	moduleName := Application.ModuleName
+	importSourceMap := make(map[string]bool)
 
-	if len(pathBean.ReturnType) > 0 { //如果有返回值
-		source = "body := " + source
-		source += "\n\t\twriteToResponse(writer, body)"
+	//遍历路由中所有用到类的Import
+	for _, pathBean := range ReadPathUtil.PathList {
+		for _, paramBean := range pathBean.Parameters { //函数参数的import
+			if len(paramBean.PackagePath) == 0 {
+				continue
+			}
+			formIm := "\t" + paramBean.GetNickImport() + " \"" + moduleName + paramBean.PackagePath + "\""
+			importSourceMap[formIm] = true
+		}
+		im := "\t" + pathBean.GetNickImport() + " \"" + moduleName + pathBean.PackagePath + "\""
+		importSourceMap[im] = true
 	}
-	source = "\n\t\t" + source
-	return source
+
+	//遍历拦截器中所有用到类的Import
+	for _, interceptor := range ReadInterceptorUtil.InterceptorList {
+		im := "\t" + interceptor.GetNickImport() + " \"" + moduleName + interceptor.PackagePath + "\""
+		importSourceMap[im] = true
+	}
+
+	importList := make([]string, 0)
+	for im := range importSourceMap {
+		importList = append(importList, im)
+	}
+
+	//排序一下
+	sort.Strings(importList)
+	importSource := ""
+	for _, im := range importList {
+		importSource += im + "\n"
+	}
+	return importSource
 }

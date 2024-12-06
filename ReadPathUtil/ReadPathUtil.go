@@ -1,4 +1,4 @@
-package MakeSourceUtil
+package ReadPathUtil
 
 import (
 	"GoAutoController/Application"
@@ -7,8 +7,20 @@ import (
 	"strings"
 )
 
+// 路由列表
+var PathList []bean.PathBean
+
+func Make() {
+	for _, fPath := range Application.GoFileList {
+
+		// 读取go文件里的路由配置
+		list := readControllerPath(fPath)
+		PathList = append(PathList[:], list[:]...)
+	}
+}
+
 // 读取go文件里的路由配置
-func ReadControllerPath(path string) []bean.PathBean {
+func readControllerPath(path string) []bean.PathBean {
 
 	//包所在路径
 	packagePath := path[len(Application.RootProject):]
@@ -39,9 +51,9 @@ func ReadControllerPath(path string) []bean.PathBean {
 			pathBean.PackagePath = packagePath
 
 			// 读取参数
-			pathBean.Parameters = ReadParameter(lines[index+1])
-			pathBean.FuncName = packagePath[strings.LastIndex(packagePath, "/")+1:] + "." + ReadFuncName(lines[index+1])
-			pathBean.ReturnType = ReadReturnType(lines[index+1])
+			pathBean.Parameters = readParameter(pathBean.PackagePath, lines[index+1])
+			pathBean.FuncName = readFuncName(lines[index+1])
+			pathBean.ReturnType = readReturnType(lines[index+1])
 			pathList = append(pathList, *pathBean)
 		}
 		index++
@@ -76,15 +88,25 @@ func readPath(line string) *bean.PathBean {
 }
 
 // 读取参数
-func ReadParameter(line string) []bean.ParamBean {
+func readParameter(goPackagePath string, line string) []bean.ParamBean {
 	paramStr := line[strings.Index(line, "(")+1 : strings.Index(line, ")")]
+	if strings.TrimSpace(paramStr) == "" { //不需要参数
+		return []bean.ParamBean{}
+	}
 	paramArr := strings.Split(paramStr, ",")
 	var paramList []bean.ParamBean
 	for _, param := range paramArr {
 		paramInfoArr := strings.Split(strings.TrimSpace(param), " ")
+		varType := paramInfoArr[1]
+		packagePath := ""
+		if strings.HasPrefix(varType, "form.") {
+			varType = varType[5:]
+			packagePath = goPackagePath + "/form"
+		}
 		paramBean := bean.ParamBean{
-			VarType: paramInfoArr[1],
-			Name:    paramInfoArr[0],
+			PackagePath: packagePath,
+			VarType:     varType,
+			Name:        paramInfoArr[0],
 		}
 		paramList = append(paramList, paramBean)
 	}
@@ -92,13 +114,13 @@ func ReadParameter(line string) []bean.ParamBean {
 }
 
 // 读取函数名
-func ReadFuncName(line string) string {
+func readFuncName(line string) string {
 	funcName := line[strings.Index(line, "func")+5 : strings.Index(line, "(")]
 	return funcName
 }
 
 // 读取返回值
-func ReadReturnType(line string) string {
+func readReturnType(line string) string {
 	returnType := line[strings.Index(line, ")")+1 : strings.Index(line, "{")]
 	return strings.TrimSpace(returnType)
 }
