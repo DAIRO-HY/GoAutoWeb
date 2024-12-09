@@ -5,15 +5,48 @@ package main
 
 import (
 	//{IMPORT}
+	"embed"
 	"encoding/json"
+	"fmt"
+	"html/template"
+	"io/fs"
+	"log"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
 )
 
+//go:embed resources/static/*
+var staticFiles embed.FS
+
+//go:embed resources/templates/*
+var templatesFiles embed.FS
+
 func init() {
-	//{BODY}
+    go startWebServer()
+}
+
+//开启web服务
+func startWebServer(){
+
+	// 将嵌入的资源限制到 "/resources/static" 子目录
+	staticFS, staticErr := fs.Sub(staticFiles, "resources/static")
+	if staticErr != nil {
+		panic(staticErr)
+	}
+
+	// 使用 http.FileServer 提供文件服务
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
+
+//{BODY}
+	port := "8021"
+
+    // 启动服务器
+    err := http.ListenAndServe(":"+port, nil)
+    if err != nil {
+        log.Fatal(err)
+    }
 }
 
 // 生成参数Map
@@ -160,4 +193,19 @@ func writeToResponse(writer http.ResponseWriter, body any) {
 		jsonData, _ := json.Marshal(body)
 		writer.Write(jsonData)
 	}
+}
+
+// 写入html模板
+func writeToTemplate(writer http.ResponseWriter, templates []string, data any) {
+
+	// 解析嵌入的模板
+	t, err := template.ParseFS(templatesFiles, templates...)
+	if err != nil {
+		http.Error(writer, fmt.Sprintf("Error loading template:%q", err), http.StatusInternalServerError)
+		return
+	}
+
+	// 设置 Content-Type 头部信息
+	writer.Header().Set("Content-Type", "text/html;charset=UTF-8")
+	t.Execute(writer, data)
 }

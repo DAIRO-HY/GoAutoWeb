@@ -22,6 +22,9 @@ type PathBean struct {
 
 	//该路由的参数
 	Parameters []ParamBean
+
+	//使用template模板（html专用）
+	Templates []string
 }
 
 // 获取导入昵称
@@ -94,4 +97,18 @@ func (mine *PathBean) GetCallMethodSource() string {
 		source += "\t\t" + callMethodSource
 	}
 	return source + "\n"
+}
+
+// 获取结尾部分调用代码
+func (mine *PathBean) GetEndSource() string {
+	if mine.Method == "html" {
+		source := "\t\ttemplates := append([]string{\"resources/templates" + mine.Path + ".html\"}, COMMON_TEMPLATES...)\n"
+		for _, template := range mine.Templates {
+			source += "\t\ttemplates = append(templates, " + template + "...)\n"
+		}
+		source += "\t\twriteToTemplate(writer, templates, body)\n"
+		return source
+	} else {
+		return "\t\twriteToResponse(writer, body)\n"
+	}
 }

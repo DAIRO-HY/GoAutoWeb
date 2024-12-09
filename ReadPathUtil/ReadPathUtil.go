@@ -49,16 +49,38 @@ func readControllerPath(path string) []bean.PathBean {
 
 			//设置包所在路径
 			pathBean.PackagePath = packagePath
+			for {
+				index++
+				line = lines[index]
+				line = strings.TrimSpace(line)
+				if strings.HasPrefix(line, "func") {
 
-			// 读取参数
-			pathBean.Parameters = readParameter(pathBean.PackagePath, lines[index+1])
-			pathBean.FuncName = readFuncName(lines[index+1])
-			pathBean.ReturnType = readReturnType(lines[index+1])
+					// 读取参数
+					pathBean.Parameters = readParameter(pathBean.PackagePath, line)
+					pathBean.FuncName = readFuncName(line)
+					pathBean.ReturnType = readReturnType(line)
+					break
+				} else if strings.Contains(line, "templates:") {
+					pathBean.Templates = readTemplate(line)
+				} else {
+					break
+				}
+			}
 			pathList = append(pathList, *pathBean)
 		}
 		index++
 	}
 	return pathList
+}
+
+// 读取要使用template模板（html专用）
+func readTemplate(line string) []string {
+	lineArr := strings.Split(line, ":")
+	templates := strings.Split(lineArr[1], ",")
+	for i, template := range templates { //去掉空格
+		templates[i] = strings.TrimSpace(template)
+	}
+	return templates
 }
 
 // 解析路由
@@ -71,6 +93,11 @@ func readPath(line string) *bean.PathBean {
 	if strings.HasPrefix(trimLine, "//post:") {
 		pathBean = &bean.PathBean{
 			Method: "post",
+			Path:   trimLine[7:],
+		}
+	} else if strings.HasPrefix(trimLine, "//html:") {
+		pathBean = &bean.PathBean{
+			Method: "html",
 			Path:   trimLine[7:],
 		}
 	} else if strings.HasPrefix(trimLine, "//get:") {

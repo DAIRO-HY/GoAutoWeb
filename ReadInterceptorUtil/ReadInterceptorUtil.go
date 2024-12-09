@@ -35,7 +35,7 @@ func MappingPre(path string) string {
 		}
 		isInterceptor := mappingInterceptor(path, interceptor.Include, interceptor.Exclude)
 		if isInterceptor { //匹配到了拦截器
-			source += "\t\tif !" + interceptor.GetNickImport() + "." + interceptor.FuncName + "(writer, request){\n\t\t\treturn\n\t\t}\n"
+			source += "\t\tif !" + interceptor.GetNickImport() + "." + interceptor.FuncName + "(writer, request) {\n\t\t\treturn\n\t\t}\n"
 		}
 	}
 	return source

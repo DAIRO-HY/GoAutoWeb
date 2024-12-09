@@ -21,17 +21,15 @@ func init() {
 func Make() {
 	autoWebCode := ""
 	for _, pathBean := range ReadPathUtil.PathList {
-		autoWebCode += `
-	http.HandleFunc("` + pathBean.Path + `", func(writer http.ResponseWriter, request *http.Request) {
-` +
+		autoWebCode += "\thttp.HandleFunc(\"" + pathBean.Path + "\", func(writer http.ResponseWriter, request *http.Request) {\n" +
 			ReadInterceptorUtil.MappingPre(pathBean.Path) + //执行前拦截器
 			pathBean.GetControllerParamSource() + // 获取Controller参数部分的代码
 			pathBean.GetCallMethodSource() + // 生成调用函数部分的代码
 			ReadInterceptorUtil.MappingAfter(pathBean.Path) + //执行前拦截器
-			`		writeToResponse(writer, body)
-	})`
+			pathBean.GetEndSource() +
+			"\t})\n"
 	}
-	autoWebSample := FileUtil.ReadText("./AutoWeb.go")
+	autoWebSample := FileUtil.ReadText("./AutoWeb.go.txt")
 	autoWebCode = strings.ReplaceAll(autoWebSample, "//{BODY}", autoWebCode)
 	autoWebCode = strings.ReplaceAll(autoWebCode, "//{IMPORT}", makeImportSource())
 	FileUtil.WriteText(Application.RootProject+"/AutoWeb.go", autoWebCode)
