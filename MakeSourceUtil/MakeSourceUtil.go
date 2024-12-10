@@ -1,13 +1,17 @@
 package MakeSourceUtil
 
 import (
-	"GoAutoController/Application"
-	"GoAutoController/FileUtil"
-	"GoAutoController/ReadInterceptorUtil"
-	"GoAutoController/ReadPathUtil"
+	"GoAutoWeb/Application"
+	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/ReadInterceptorUtil"
+	"GoAutoWeb/ReadPathUtil"
+	_ "embed"
 	"sort"
 	"strings"
 )
+
+//go:embed AutoWeb.go.txt
+var AutoWebGoSample string
 
 func init() {
 
@@ -29,10 +33,12 @@ func Make() {
 			pathBean.GetEndSource() +
 			"\t})\n"
 	}
-	autoWebSample := FileUtil.ReadText("./AutoWeb.go.txt")
+	autoWebSample := AutoWebGoSample
 	autoWebCode = strings.ReplaceAll(autoWebSample, "//{BODY}", autoWebCode)
 	autoWebCode = strings.ReplaceAll(autoWebCode, "//{IMPORT}", makeImportSource())
-	FileUtil.WriteText(Application.RootProject+"/AutoWeb.go", autoWebCode)
+	if FileUtil.ReadText(Application.RootProject+"/AutoWeb.go") != autoWebCode { //避免重复写入
+		FileUtil.WriteText(Application.RootProject+"/AutoWeb.go", autoWebCode)
+	}
 }
 
 // 生成导入包的代码

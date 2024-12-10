@@ -101,9 +101,13 @@ func (mine *PathBean) GetCallMethodSource() string {
 
 // 获取结尾部分调用代码
 func (mine *PathBean) GetEndSource() string {
-	if mine.Method == "html" {
-		source := "\t\ttemplates := append([]string{\"resources/templates" + mine.Path + ".html\"}, COMMON_TEMPLATES...)\n"
+	if len(mine.Templates) > 0 { //这是一个html模板路由
+		source := ""
 		for _, template := range mine.Templates {
+			if strings.HasSuffix(template, ".html") { //这是一个html模板
+				source = "\t\ttemplates := append([]string{\"resources/templates/" + template + "\"}, COMMON_TEMPLATES...)\n"
+				continue
+			}
 			source += "\t\ttemplates = append(templates, " + template + "...)\n"
 		}
 		source += "\t\twriteToTemplate(writer, templates, body)\n"

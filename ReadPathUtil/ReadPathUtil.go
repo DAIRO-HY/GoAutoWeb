@@ -1,9 +1,9 @@
 package ReadPathUtil
 
 import (
-	"GoAutoController/Application"
-	"GoAutoController/FileUtil"
-	"GoAutoController/bean"
+	"GoAutoWeb/Application"
+	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/bean"
 	"strings"
 )
 
@@ -95,11 +95,11 @@ func readPath(line string) *bean.PathBean {
 			Method: "post",
 			Path:   trimLine[7:],
 		}
-	} else if strings.HasPrefix(trimLine, "//html:") {
-		pathBean = &bean.PathBean{
-			Method: "html",
-			Path:   trimLine[7:],
-		}
+		//} else if strings.HasPrefix(trimLine, "//html:") {
+		//	pathBean = &bean.PathBean{
+		//		Method: "html",
+		//		Path:   trimLine[7:],
+		//	}
 	} else if strings.HasPrefix(trimLine, "//get:") {
 		pathBean = &bean.PathBean{
 			Method: "get",

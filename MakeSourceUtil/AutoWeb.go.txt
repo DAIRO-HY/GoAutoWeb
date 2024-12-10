@@ -23,12 +23,8 @@ var staticFiles embed.FS
 //go:embed resources/templates/*
 var templatesFiles embed.FS
 
-func init() {
-    go startWebServer()
-}
-
 //开启web服务
-func startWebServer(){
+func startWebServer(port int) {
 
 	// 将嵌入的资源限制到 "/resources/static" 子目录
 	staticFS, staticErr := fs.Sub(staticFiles, "resources/static")
@@ -40,10 +36,8 @@ func startWebServer(){
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
 //{BODY}
-	port := "8021"
-
     // 启动服务器
-    err := http.ListenAndServe(":"+port, nil)
+    err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
     if err != nil {
         log.Fatal(err)
     }

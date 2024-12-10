@@ -1,25 +1,30 @@
 package Application
 
 import (
-	"GoAutoController/FileUtil"
+	"GoAutoWeb/FileUtil"
 	"strings"
 )
 
 // 项目根目录
-var RootProject = "C:\\develop\\project\\idea\\DairoNPS"
+var RootProject string
 
 // go代码文件列表
-var GoFileList = FileUtil.GetGoFile(RootProject)
+var GoFileList []string
 
 // 项目的模块名
-var ModuleName = readModuleName()
+var ModuleName string
+
+func Init(folder string) {
+	RootProject = folder
+	readModuleName()
+	GoFileList = FileUtil.GetGoFile(RootProject)
+}
 
 // 读取项目的模块名
-func readModuleName() string {
+func readModuleName() {
 	gomod := FileUtil.ReadText(RootProject + "/go.mod")
 	gomod = strings.TrimSpace(gomod)
 	gomod = strings.ReplaceAll(gomod, "\r\n", "\n")
 	gomod = strings.ReplaceAll(gomod, "\n", " ")
-	moduleName := strings.Split(gomod, " ")[1]
-	return moduleName
+	ModuleName = strings.Split(gomod, " ")[1]
 }

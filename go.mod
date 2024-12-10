@@ -1,2 +1,2 @@
-module GoAutoController
+module GoAutoWeb
 go 1.23.1

@@ -1,9 +1,9 @@
 package ReadInterceptorUtil
 
 import (
-	"GoAutoController/Application"
-	"GoAutoController/FileUtil"
-	"GoAutoController/bean"
+	"GoAutoWeb/Application"
+	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/bean"
 	"sort"
 	"strconv"
 	"strings"
