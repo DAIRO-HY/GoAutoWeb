@@ -4,7 +4,7 @@
 package main
 
 import (
-	//{IMPORT}
+//{IMPORT}
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -23,7 +23,7 @@ var staticFiles embed.FS
 //go:embed resources/templates/*
 var templatesFiles embed.FS
 
-//开启web服务
+// 开启web服务
 func startWebServer(port int) {
 
 	// 将嵌入的资源限制到 "/resources/static" 子目录
@@ -36,11 +36,11 @@ func startWebServer(port int) {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
 //{BODY}
-    // 启动服务器
-    err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
-    if err != nil {
-        log.Fatal(err)
-    }
+	// 启动服务器
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // 生成参数Map
