@@ -11,34 +11,24 @@ import (
 )
 
 //go:embed AutoWeb.go.txt
-var AutoWebGoSample string
-
-func init() {
-
-	//初始化读取路由列表
-	ReadPathUtil.Make()
-
-	//初始化读取拦截器列表
-	ReadInterceptorUtil.Make()
-}
+var autoWebSample string
 
 func Make() {
-	autoWebCode := ""
-	for _, pathBean := range ReadPathUtil.PathList {
-		autoWebCode += "\thttp.HandleFunc(\"" + pathBean.Path + "\", func(writer http.ResponseWriter, request *http.Request) {\n" +
-			ReadInterceptorUtil.MappingPre(pathBean.Path) + //执行前拦截器
-			pathBean.GetControllerParamSource() + // 获取Controller参数部分的代码
-			pathBean.GetCallMethodSource() + // 生成调用函数部分的代码
-			ReadInterceptorUtil.MappingAfter(pathBean.Path) + //执行前拦截器
-			pathBean.GetEndSource() +
-			"\t})\n"
-	}
-	autoWebSample := AutoWebGoSample
-	autoWebCode = strings.ReplaceAll(autoWebSample, "//{BODY}", autoWebCode)
+	autoWebCode := autoWebSample
+	autoWebCode = strings.ReplaceAll(autoWebCode, "//{BODY}", makeHandleBody())
 	autoWebCode = strings.ReplaceAll(autoWebCode, "//{IMPORT}", makeImportSource())
 	if FileUtil.ReadText(Application.RootProject+"/AutoWeb.go") != autoWebCode { //避免重复写入
 		FileUtil.WriteText(Application.RootProject+"/AutoWeb.go", autoWebCode)
 	}
+}
+
+// 生成Handle部分代码
+func makeHandleBody() string {
+	source := ""
+	for _, pathBean := range ReadPathUtil.PathList {
+		source += pathBean.MakeHandleSource()
+	}
+	return source
 }
 
 // 生成导入包的代码

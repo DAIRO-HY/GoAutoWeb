@@ -1,6 +1,9 @@
-package bean
+package ReadPathUtil
 
-import "strings"
+import (
+	"GoAutoWeb/ReadInterceptorUtil"
+	"strings"
+)
 
 // Controller路由信息
 type PathBean struct {
@@ -27,6 +30,17 @@ type PathBean struct {
 	Templates []string
 }
 
+// MakeHandleSource 生成Handle部分的代码
+func (mine *PathBean) MakeHandleSource() string {
+	return "\thttp.HandleFunc(\"" + mine.Path + "\", func(writer http.ResponseWriter, request *http.Request) {\n" +
+		ReadInterceptorUtil.MappingBefore(mine.Path) + //执行前拦截器
+		mine.getControllerParamSource() + // 获取Controller参数部分的代码
+		mine.getCallMethodSource() + // 生成调用函数部分的代码
+		ReadInterceptorUtil.MappingAfter(mine.Path) + //执行前拦截器
+		mine.getEndSource() +
+		"\t})\n"
+}
+
 // 获取导入昵称
 func (mine *PathBean) GetNickImport() string {
 	if len(mine.PackagePath) == 0 {
@@ -38,7 +52,7 @@ func (mine *PathBean) GetNickImport() string {
 }
 
 // 获取Controller参数部分的代码
-func (mine *PathBean) GetControllerParamSource() string {
+func (mine *PathBean) getControllerParamSource() string {
 	source := ""
 	for _, parameter := range mine.Parameters {
 		if parameter.VarType == "http.ResponseWriter" { //这不是一个URL参数
@@ -68,7 +82,7 @@ func (mine *PathBean) GetControllerParamSource() string {
 }
 
 // 生成调用函数部分的代码
-func (mine *PathBean) GetCallMethodSource() string {
+func (mine *PathBean) getCallMethodSource() string {
 
 	//函数参数部分的代码
 	methodParamSource := ""
@@ -100,7 +114,7 @@ func (mine *PathBean) GetCallMethodSource() string {
 }
 
 // 获取结尾部分调用代码
-func (mine *PathBean) GetEndSource() string {
+func (mine *PathBean) getEndSource() string {
 	if len(mine.Templates) > 0 { //这是一个html模板路由
 		source := ""
 		for _, template := range mine.Templates {

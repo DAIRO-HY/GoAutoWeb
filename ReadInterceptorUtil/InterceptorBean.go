@@ -1,4 +1,4 @@
-package bean
+package ReadInterceptorUtil
 
 import "strings"
 

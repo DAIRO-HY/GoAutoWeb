@@ -3,12 +3,11 @@ package ReadPathUtil
 import (
 	"GoAutoWeb/Application"
 	"GoAutoWeb/FileUtil"
-	"GoAutoWeb/bean"
 	"strings"
 )
 
 // 路由列表
-var PathList []bean.PathBean
+var PathList []PathBean
 
 func Make() {
 	for _, fPath := range Application.GoFileList {
@@ -20,7 +19,7 @@ func Make() {
 }
 
 // 读取go文件里的路由配置
-func readControllerPath(path string) []bean.PathBean {
+func readControllerPath(path string) []PathBean {
 
 	//包所在路径
 	packagePath := path[len(Application.RootProject):]
@@ -38,7 +37,7 @@ func readControllerPath(path string) []bean.PathBean {
 	}
 	lines := strings.Split(goCode, "\n")
 
-	var pathList []bean.PathBean
+	var pathList []PathBean
 	index := 0
 	for index < len(lines) {
 		line := lines[index]
@@ -84,14 +83,14 @@ func readTemplate(line string) []string {
 }
 
 // 解析路由
-func readPath(line string) *bean.PathBean {
+func readPath(line string) *PathBean {
 	trimLine := strings.ReplaceAll(line, " ", "")
 	trimLine = strings.ReplaceAll(trimLine, "\t", "")
 
 	//标记改行是否有路由标记
-	var pathBean *bean.PathBean
+	var pathBean *PathBean
 	if strings.HasPrefix(trimLine, "//post:") {
-		pathBean = &bean.PathBean{
+		pathBean = &PathBean{
 			Method: "post",
 			Path:   trimLine[7:],
 		}
@@ -101,12 +100,12 @@ func readPath(line string) *bean.PathBean {
 		//		Path:   trimLine[7:],
 		//	}
 	} else if strings.HasPrefix(trimLine, "//get:") {
-		pathBean = &bean.PathBean{
+		pathBean = &PathBean{
 			Method: "get",
 			Path:   trimLine[6:],
 		}
 	} else if strings.HasPrefix(trimLine, "//request:") {
-		pathBean = &bean.PathBean{
+		pathBean = &PathBean{
 			Method: "request",
 			Path:   trimLine[10:],
 		}
@@ -115,13 +114,13 @@ func readPath(line string) *bean.PathBean {
 }
 
 // 读取参数
-func readParameter(goPackagePath string, line string) []bean.ParamBean {
+func readParameter(goPackagePath string, line string) []ParamBean {
 	paramStr := line[strings.Index(line, "(")+1 : strings.Index(line, ")")]
 	if strings.TrimSpace(paramStr) == "" { //不需要参数
-		return []bean.ParamBean{}
+		return []ParamBean{}
 	}
 	paramArr := strings.Split(paramStr, ",")
-	var paramList []bean.ParamBean
+	var paramList []ParamBean
 	for _, param := range paramArr {
 		paramInfoArr := strings.Split(strings.TrimSpace(param), " ")
 		varType := paramInfoArr[1]
@@ -130,7 +129,7 @@ func readParameter(goPackagePath string, line string) []bean.ParamBean {
 			varType = varType[5:]
 			packagePath = goPackagePath + "/form"
 		}
-		paramBean := bean.ParamBean{
+		paramBean := ParamBean{
 			PackagePath: packagePath,
 			VarType:     varType,
 			Name:        paramInfoArr[0],

@@ -3,14 +3,13 @@ package ReadInterceptorUtil
 import (
 	"GoAutoWeb/Application"
 	"GoAutoWeb/FileUtil"
-	"GoAutoWeb/bean"
 	"sort"
 	"strconv"
 	"strings"
 )
 
 // InterceptorList 拦截器列表
-var InterceptorList []bean.InterceptorBean
+var InterceptorList []InterceptorBean
 
 func Make() {
 	for _, fPath := range Application.GoFileList {
@@ -27,7 +26,7 @@ func Make() {
 }
 
 // 匹配执行前拦截器
-func MappingPre(path string) string {
+func MappingBefore(path string) string {
 	source := ""
 	for _, interceptor := range InterceptorList {
 		if interceptor.HandleFlag != "before" {
@@ -110,7 +109,7 @@ func mappingInterceptor(path string, includes []string, excludes []string) bool 
 }
 
 // 读取go文件里的拦截器
-func readInterceptor(path string) []bean.InterceptorBean {
+func readInterceptor(path string) []InterceptorBean {
 
 	//包所在路径
 	packagePath := path[len(Application.RootProject):]
@@ -128,7 +127,7 @@ func readInterceptor(path string) []bean.InterceptorBean {
 	}
 	lines := strings.Split(goCode, "\n")
 
-	var interceptorList []bean.InterceptorBean
+	var interceptorList []InterceptorBean
 	index := 0
 	for index < len(lines) {
 		line := lines[index]
@@ -139,7 +138,7 @@ func readInterceptor(path string) []bean.InterceptorBean {
 			continue
 		}
 		lineArr := strings.Split(trimLine, ":")
-		interceptorBean := &bean.InterceptorBean{
+		interceptorBean := &InterceptorBean{
 			HandleFlag: lineArr[1],
 
 			//设置包所在路径
