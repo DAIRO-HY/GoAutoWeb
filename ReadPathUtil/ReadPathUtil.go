@@ -62,7 +62,7 @@ func readControllerPath(path string) []PathBean {
 				} else if strings.Contains(line, "templates:") {
 					pathBean.Templates = readTemplate(line)
 				} else {
-					break
+
 				}
 			}
 			pathList = append(pathList, *pathBean)
