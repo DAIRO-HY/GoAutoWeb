@@ -75,7 +75,7 @@ func (mine *PathBean) getControllerParamSource() string {
 			source += "\n\t\t" + parameter.Name + " := getForm[" + parameter.GetNickImport() + "." + parameter.VarType + "](paramMap)"
 			source += "\n\t\tvalidBody := validateForm(" + parameter.Name + ")"
 			source += "\n\t\tif validBody != nil {"
-			source += "\n\t\t\twriteToResponse(writer, validBody)"
+			source += "\n\t\t\twriteFieldError(writer, validBody)"
 			source += "\n\t\t\treturn"
 			source += "\n\t\t}"
 		}

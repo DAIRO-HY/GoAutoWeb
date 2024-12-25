@@ -195,6 +195,15 @@ func validateForm(form any) any {
 	return body
 }
 
+// 返回表单验证失败结果
+func writeFieldError(writer http.ResponseWriter, validBody any){
+
+	// 设置 Content-Type 头部信息
+	writer.Header().Set("Content-Type", "text/plain;charset=UTF-8")
+	writer.WriteHeader(http.StatusInternalServerError) // 设置状态码
+	writeToResponse(writer,validBody)
+}
+
 // 返回结果
 func writeToResponse(writer http.ResponseWriter, body any) {
 	if body == nil {
