@@ -73,6 +73,11 @@ func (mine *PathBean) getControllerParamSource() string {
 			source += "\n\t\t" + parameter.Name + " := getFloat64(paramMap, \"" + parameter.Name + "\")"
 		} else if strings.HasSuffix(parameter.VarType, "Form") { //这是一个结构体Form表单
 			source += "\n\t\t" + parameter.Name + " := getForm[" + parameter.GetNickImport() + "." + parameter.VarType + "](paramMap)"
+			source += "\n\t\tvalidBody := validateForm(" + parameter.Name + ")"
+			source += "\n\t\tif validBody != nil {"
+			source += "\n\t\t\twriteToResponse(writer, validBody)"
+			source += "\n\t\t\treturn"
+			source += "\n\t\t}"
 		}
 	}
 	if len(source) > 0 {

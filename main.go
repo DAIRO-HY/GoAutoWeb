@@ -3,6 +3,7 @@ package main
 import (
 	"GoAutoWeb/Application"
 	"GoAutoWeb/MakeSourceUtil"
+	"GoAutoWeb/ReadFormUtil"
 	"GoAutoWeb/ReadInterceptorUtil"
 	"GoAutoWeb/ReadPathUtil"
 	"fmt"
@@ -28,6 +29,9 @@ func main() {
 
 	//初始化读取拦截器列表
 	ReadInterceptorUtil.Make()
+
+	//生成Form表单列表
+	ReadFormUtil.Make()
 
 	//生成代码
 	MakeSourceUtil.Make()

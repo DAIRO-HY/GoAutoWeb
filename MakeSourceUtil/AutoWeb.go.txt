@@ -8,6 +8,10 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/locales/zh"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	zh_translations "github.com/go-playground/validator/v10/translations/zh"
 	"html/template"
 	"io/fs"
 	"log"
@@ -22,6 +26,18 @@ var staticFiles embed.FS
 
 //go:embed resources/templates/*
 var templatesFiles embed.FS
+
+// 定义一个表单验证全局实例
+var validate = validator.New()
+
+var trans ut.Translator
+
+func init() {
+	zhLocale := zh.New() // 中文翻译器
+	uni := ut.New(zhLocale, zhLocale)
+	trans, _ = uni.GetTranslator("zh") // 注册中文翻译
+	zh_translations.RegisterDefaultTranslations(validate, trans)
+}
 
 // 开启web服务
 func startWebServer(port int) {
@@ -151,6 +167,32 @@ func getFloat64(paramMap map[string][]string, key string) float64 {
 	}
 	rValue, _ := strconv.ParseFloat(value[0], 64)
 	return rValue
+}
+
+// 表单验证
+func validateForm(form any) any {
+	err := validate.Struct(form)
+	if err == nil {
+		return nil
+	}
+	fieldError := map[string]*[]string{}
+	for _, validErr := range err.(validator.ValidationErrors) {
+		key := validErr.Field()
+		key = strings.ToLower(key[:1]) + key[1:]
+		messages, isExists := fieldError[key]
+		if !isExists {
+			var temp []string
+			messages = &temp
+			fieldError[key] = messages
+		}
+		*messages = append(*messages, validErr.Translate(trans))
+	}
+	body := map[string]any{
+		"code": 2,
+		"msg":  "参数错误",
+		"data": fieldError,
+	}
+	return body
 }
 
 // 返回结果
