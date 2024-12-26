@@ -59,10 +59,9 @@ func readControllerPath(path string) []PathBean {
 					pathBean.FuncName = readFuncName(line)
 					pathBean.ReturnType = readReturnType(line)
 					break
-				} else if strings.Contains(line, "templates:") {
+				} else if strings.Contains(line, "@templates:") {
 					pathBean.Templates = readTemplate(line)
 				} else {
-
 				}
 			}
 			pathList = append(pathList, *pathBean)
@@ -89,26 +88,23 @@ func readPath(line string) *PathBean {
 
 	//标记改行是否有路由标记
 	var pathBean *PathBean
-	if strings.HasPrefix(trimLine, "//post:") {
+	if strings.HasPrefix(trimLine, "//@post:") {
 		pathBean = &PathBean{
 			Method: "post",
-			Path:   trimLine[7:],
+			Path:   trimLine[8:],
 		}
-		//} else if strings.HasPrefix(trimLine, "//html:") {
-		//	pathBean = &bean.PathBean{
-		//		Method: "html",
-		//		Path:   trimLine[7:],
-		//	}
-	} else if strings.HasPrefix(trimLine, "//get:") {
+	} else if strings.HasPrefix(trimLine, "//@get:") {
 		pathBean = &PathBean{
 			Method: "get",
-			Path:   trimLine[6:],
+			Path:   trimLine[7:],
 		}
-	} else if strings.HasPrefix(trimLine, "//request:") {
+	} else if strings.HasPrefix(trimLine, "//@request:") {
 		pathBean = &PathBean{
 			Method: "request",
-			Path:   trimLine[10:],
+			Path:   trimLine[11:],
 		}
+	} else {
+		return nil
 	}
 	return pathBean
 }
