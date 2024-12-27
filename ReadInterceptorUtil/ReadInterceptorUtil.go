@@ -133,7 +133,7 @@ func readInterceptor(path string) []InterceptorBean {
 		line := lines[index]
 		trimLine := strings.ReplaceAll(line, " ", "")
 		trimLine = strings.ReplaceAll(trimLine, "\t", "")
-		if !strings.HasPrefix(trimLine, "//interceptor:") {
+		if !strings.HasPrefix(trimLine, "//@interceptor:") {
 			index++
 			continue
 		}
@@ -151,19 +151,19 @@ func readInterceptor(path string) []InterceptorBean {
 			}
 			trimLine = strings.ReplaceAll(lines[index], " ", "")
 			trimLine = strings.ReplaceAll(trimLine, "\t", "")
-			if strings.HasPrefix(trimLine, "//include:") { //包含路由
+			if strings.HasPrefix(trimLine, "//@include:") { //包含路由
 				include := strings.Split(trimLine, ":")[1]
 
 				//去除所有空格
 				include = strings.ReplaceAll(include, " ", "")
 				interceptorBean.Include = strings.Split(include, ",")
-			} else if strings.HasPrefix(trimLine, "//exclude:") { //排除路由
+			} else if strings.HasPrefix(trimLine, "//@exclude:") { //排除路由
 				exclude := strings.Split(trimLine, ":")[1]
 
 				//去除所有空格
 				exclude = strings.ReplaceAll(exclude, " ", "")
 				interceptorBean.Exclude = strings.Split(exclude, ",")
-			} else if strings.HasPrefix(trimLine, "//order:") { //优先级
+			} else if strings.HasPrefix(trimLine, "//@order:") { //优先级
 				interceptorBean.Order, _ = strconv.Atoi(strings.Split(trimLine, ":")[1])
 			} else if strings.HasPrefix(trimLine, "func") { //拦截器函数名
 				interceptorBean.FuncName = trimLine[strings.Index(trimLine, "func")+4 : strings.Index(trimLine, "(")]
