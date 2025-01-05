@@ -1,6 +1,7 @@
 package ReadPathUtil
 
 import (
+	"GoAutoWeb/ReadFormUtil"
 	"GoAutoWeb/ReadInterceptorUtil"
 	"strings"
 )
@@ -72,12 +73,19 @@ func (mine *PathBean) getControllerParamSource() string {
 		} else if parameter.VarType == "float64" {
 			source += "\n\t\t" + parameter.Name + " := getFloat64(paramMap, \"" + parameter.Name + "\")"
 		} else if strings.HasSuffix(parameter.VarType, "Form") { //这是一个结构体Form表单
+
+			//生成表单相关验证代码
+			formBean := ReadFormUtil.FormMap[parameter.PackagePath+"/"+parameter.VarType]
+
 			source += "\n\t\t" + parameter.Name + " := getForm[" + parameter.GetNickImport() + "." + parameter.VarType + "](paramMap)"
 			source += "\n\t\tvalidBody := validateForm(" + parameter.Name + ")"
 			source += "\n\t\tif validBody != nil {"
 			source += "\n\t\t\twriteFieldError(writer, validBody)"
 			source += "\n\t\t\treturn"
 			source += "\n\t\t}"
+			for _, function := range formBean.Functions {
+				source += function.MakeFormCheckSource(parameter.Name)
+			}
 		}
 	}
 	if len(source) > 0 {

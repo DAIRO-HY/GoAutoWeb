@@ -204,6 +204,25 @@ func writeFieldError(writer http.ResponseWriter, validBody any){
 	writeToResponse(writer,validBody)
 }
 
+// 返回表单相关验证失败结果
+func writeFieldFormError(writer http.ResponseWriter, msg string, fileds ...string){
+
+	// 设置 Content-Type 头部信息
+	writer.Header().Set("Content-Type", "text/plain;charset=UTF-8")
+	writer.WriteHeader(http.StatusInternalServerError) // 设置状态码
+
+	fieldError := map[string][]string{}
+	for _,it := range fileds{
+		fieldError[it] = []string{msg}
+	}
+	body := map[string]any{
+		"code": 2,
+		"msg":  "参数错误",
+		"data": fieldError,
+	}
+	writeToResponse(writer,body)
+}
+
 // 返回结果
 func writeToResponse(writer http.ResponseWriter, body any) {
 	if body == nil {

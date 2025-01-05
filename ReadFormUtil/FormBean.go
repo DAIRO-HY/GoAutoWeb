@@ -11,6 +11,9 @@ type FormBean struct {
 	//属性列表
 	Properties []PropertyBean
 
+	//结构体函数列表
+	Functions []FunctionBean
+
 	//结构体名
 	Name string
 }
