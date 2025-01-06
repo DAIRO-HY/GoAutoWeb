@@ -31,10 +31,10 @@ func (mine *FunctionBean) MakeFormCheckSource(paramName string) string {
 
 	source := ""
 	msgVar := paramName + mine.Name + "Msg"
-	source += "\n\t\t" + msgVar + " := " + paramName + "." + mine.Name + "()"
-	source += "\n\t\tif " + msgVar + " != nil { // 表单相关验证失败"
-	source += "\n\t\t\twriteFieldFormError(writer, *" + msgVar + "," + fields + ")"
-	source += "\n\t\t\treturn"
-	source += "\n\t\t}"
+	source += "\t\t" + msgVar + " := " + paramName + "." + mine.Name + "()\n"
+	source += "\t\tif " + msgVar + " != nil { // 表单相关验证失败\n"
+	source += "\t\t\twriteFieldFormError(writer, *" + msgVar + "," + fields + ")\n"
+	source += "\t\t\treturn\n"
+	source += "\t\t}\n"
 	return source
 }
