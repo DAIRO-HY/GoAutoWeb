@@ -53,6 +53,10 @@ func readControllerPath(path string) []PathBean {
 				line = lines[index]
 				line = strings.TrimSpace(line)
 				if strings.HasPrefix(line, "func") {
+					for !strings.Contains(line, "{") { //如果该行没有{，说明函数的参数已换行处理
+						index++
+						line += strings.TrimSpace(lines[index])
+					}
 
 					// 读取参数
 					pathBean.Parameters = readParameter(pathBean.PackagePath, line)
@@ -118,7 +122,11 @@ func readParameter(goPackagePath string, line string) []ParamBean {
 	paramArr := strings.Split(paramStr, ",")
 	var paramList []ParamBean
 	for _, param := range paramArr {
-		paramInfoArr := strings.Split(strings.TrimSpace(param), " ")
+		param = strings.TrimSpace(param)
+		if param == "" {
+			continue
+		}
+		paramInfoArr := strings.Split(param, " ")
 		varType := paramInfoArr[1]
 		packagePath := ""
 		if strings.HasPrefix(varType, "form.") {

@@ -59,114 +59,128 @@ func startWebServer(port int) {
 	}
 }
 
-// 生成参数Map
-func makeParamMap(request *http.Request) map[string][]string {
-	query := request.URL.Query()
-
-	//解析post表单
-	request.ParseForm()
-	postParams := request.PostForm
-
-	//将参数转换成Map
-	paramMap := make(map[string][]string)
-	for key, v := range query {
-		paramMap[key] = v
+// 获取string数组类型的参数
+func getStringArray(query url.Values, postForm url.Values, key string) []string {
+	value,isExists := postForm[key]
+	if isExists {
+		return value
 	}
-	for key, v := range postParams {
-		paramMap[key] = v
+	value,isExists = query[key]
+	if isExists {
+		return value
 	}
-	return paramMap
+	return nil
 }
 
-// 获取表单实例
-func getForm[T any](paramMap map[string][]string) T {
 
-	// 创建结构体实例
-	targetForm := new(T)
-	reflectForm := reflect.ValueOf(targetForm).Elem()
-	argType := reflect.TypeOf(*targetForm)
-
-	// 遍历结构体字段
-	for j := 0; j < argType.NumField(); j++ {
-		field := argType.Field(j)
-		fieldName := field.Name
-
-		//得到参数值
-		value := paramMap[fieldName]
-		if value == nil {
-			//将首字母小写再去获取参数
-			lowerKey := strings.ToLower(fieldName[:1]) + fieldName[1:]
-			value = paramMap[lowerKey]
-		}
-		if value == nil {
-			continue
-		}
-
-		// 设置字段值（这里我们设置为示例值）
-		switch field.Type.Kind() {
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-
-			// 设置整数字段
-			intValue, _ := strconv.ParseInt(value[0], 10, 64)
-			reflectForm.Field(j).SetInt(intValue)
-		case reflect.Float32, reflect.Float64:
-			floatValue, _ := strconv.ParseFloat(value[0], 64)
-			reflectForm.Field(j).SetFloat(floatValue)
-		case reflect.String:
-			reflectForm.Field(j).SetString(value[0]) // 设置字符串字段
-		}
+// 获取int数组类型的参数
+func getIntArray(query url.Values, postForm url.Values, key string) []int {
+	valueArray := getStringArray(query, postForm, key)
+	if valueArray == nil {
+		return nil
 	}
-	return *targetForm
+	value := make([]int, len(valueArray))
+	for i, it := range valueArray {
+		value[i], _ = strconv.Atoi(it)
+	}
+	return value
 }
 
-// 获取string类型的参数
-func getString(paramMap map[string][]string, key string) string {
-	value := paramMap[key]
-	if value == nil {
-		return ""
+// 获取int8数组类型的参数
+func getInt8Array(query url.Values, postForm url.Values, key string) []int8 {
+	valueArray := getStringArray(query, postForm, key)
+	if valueArray == nil {
+		return nil
 	}
-	rValue := value[0]
-	return rValue
+	value := make([]int8, len(valueArray))
+	for i, it := range valueArray {
+		i8, _ := strconv.Atoi(it)
+		value[i] = int8(i8)
+	}
+	return value
 }
 
-// 获取int类型的参数
-func getInt(paramMap map[string][]string, key string) int {
-	value := paramMap[key]
-	if value == nil {
-		return 0
+// 获取int16数组类型的参数
+func getInt16Array(query url.Values, postForm url.Values, key string) []int16 {
+	valueArray := getStringArray(query, postForm, key)
+	if valueArray == nil {
+		return nil
 	}
-	rValue, _ := strconv.Atoi(value[0])
-	return rValue
+	value := make([]int16, len(valueArray))
+	for i, it := range valueArray {
+		i16, _ := strconv.Atoi(it)
+		value[i] = int16(i16)
+	}
+	return value
 }
 
-// 获取int类型的参数
-func getInt64(paramMap map[string][]string, key string) int64 {
-	value := paramMap[key]
-	if value == nil {
-		return 0
+// 获取int32数组类型的参数
+func getInt32Array(query url.Values, postForm url.Values, key string) []int32 {
+	valueArray := getStringArray(query, postForm, key)
+	if valueArray == nil {
+		return nil
 	}
-	rValue, _ := strconv.ParseInt(value[0], 10, 64)
-	return rValue
+	value := make([]int32, len(valueArray))
+	for i, it := range valueArray {
+		i32, _ := strconv.Atoi(it)
+		value[i] = int32(i32)
+	}
+	return value
 }
 
-// 获取float32类型的参数
-func getFloat32(paramMap map[string][]string, key string) float32 {
-	value := paramMap[key]
-	if value == nil {
-		return 0
+// 获取int64数组类型的参数
+func getInt64Array(query url.Values, postForm url.Values, key string) []int64 {
+	valueArray := getStringArray(query, postForm, key)
+	if valueArray == nil {
+		return nil
 	}
-	rValue, _ := strconv.ParseFloat(value[0], 32)
-	return float32(rValue)
+	value := make([]int64, len(valueArray))
+	for i, it := range valueArray {
+		i64, _ := strconv.ParseInt(it, 10, 64)
+		value[i] = i64
+	}
+	return value
 }
 
-// 获取float64类型的参数
-func getFloat64(paramMap map[string][]string, key string) float64 {
-	value := paramMap[key]
-	if value == nil {
-		return 0
+// 获取float32数组类型的参数
+func getFloat32Array(query url.Values, postForm url.Values, key string) []float32 {
+	valueArray := getStringArray(query, postForm, key)
+	if valueArray == nil {
+		return nil
 	}
-	rValue, _ := strconv.ParseFloat(value[0], 64)
-	return rValue
+	value := make([]float32, len(valueArray))
+	for i, it := range valueArray {
+		f32, _ := strconv.ParseFloat(it, 32)
+		value[i] = float32(f32)
+	}
+	return value
+}
+
+// 获取float64数组类型的参数
+func getFloat64Array(query url.Values, postForm url.Values, key string) []float64 {
+	valueArray := getStringArray(query, postForm, key)
+	if valueArray == nil {
+		return nil
+	}
+	value := make([]float64, len(valueArray))
+	for i, it := range valueArray {
+		f64, _ := strconv.ParseFloat(it, 64)
+		value[i] = f64
+	}
+	return value
+}
+
+// 获取Bool数组类型的参数
+func getBoolArray(query url.Values, postForm url.Values, key string) []bool {
+	valueArray := getStringArray(query, postForm, key)
+	if valueArray == nil {
+		return nil
+	}
+	value := make([]bool, len(valueArray))
+	for i, it := range valueArray {
+		value[i] = it == "true"
+	}
+	return value
 }
 
 // 表单验证
