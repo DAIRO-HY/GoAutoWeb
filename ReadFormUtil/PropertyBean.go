@@ -8,4 +8,7 @@ type PropertyBean struct {
 
 	//参数名
 	Name string
+
+	/** 表单验证列表 **/
+	valids []ValidateBean
 }

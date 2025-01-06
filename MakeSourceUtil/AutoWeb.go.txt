@@ -183,6 +183,44 @@ func getBoolArray(query url.Values, postForm url.Values, key string) []bool {
 	return value
 }
 
+// 非空检查
+func isNotEmpty(fieldError map[string]*[]string, field string, targetValue any, msg string) {
+	value := fmt.Sprintf("%v",targetValue)
+	message := ""
+	if len(value) == 0 { //判断是否为空字符串
+		message = "该栏必填"
+	}
+	addFieldErr(fieldError,field,message)
+}
+
+// 输入长度检查
+func isLength(fieldError map[string]*[]string, field string, targetValue any, min int, max int, msg string) {
+	value := fmt.Sprintf("%v",targetValue)
+	lengtn := len(value)
+	message := ""
+	if min > 0 && lengtn < min { //比较最小长度
+		message = fmt.Sprintf("长度必须至少为%d个字符", min)
+	} else if max > 0 && lengtn > max {
+		message = fmt.Sprintf("长度不能超过%d个字符", max)
+	} else {
+	}
+	addFieldErr(fieldError,field,message)
+}
+
+// 添加表单检查错误消息
+func addFieldErr(fieldError map[string]*[]string, field string, message string){
+	if message != "" {
+		field = strings.ToLower(field[:1]) + field[1:]
+		messages, isExists := fieldError[field]
+		if !isExists {
+			var temp []string
+			messages = &temp
+			fieldError[field] = messages
+		}
+		*messages = append(*messages, message)
+	}
+}
+
 // 表单验证
 func validateForm(form any) any {
 	err := validate.Struct(form)

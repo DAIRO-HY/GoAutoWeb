@@ -70,3 +70,20 @@ func (mine *FormBean) MakeGetParameterSource(formStructName string, paramName st
 	}
 	return source
 }
+
+// 生成获取表单值的代码
+func (mine *FormBean) MakeValidateSource(formName string) string {
+	source := ""
+	for _, property := range mine.Properties {
+		for _, validBean := range property.valids {
+			source += validBean.MakeValidSource(property.Name, formName+"."+property.Name)
+		}
+	}
+	if source != "" {
+		source = "\t\tfiledError := map[string]*[]string{}\n" + source
+		source += "\t\tif len(filedError) > 0{\n"
+		source += "\t\t\twriteFieldError(writer, filedError)\n\t\t\treturn\n"
+		source += "\t\t}\n"
+	}
+	return source
+}

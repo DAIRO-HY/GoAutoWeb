@@ -45,6 +45,7 @@ func (mine *ParamBean) MakeGetParameterSource() string {
 
 		//source += "\n\t\t" + mine.Name + " := getForm[" + mine.GetNickImport() + "." + mine.VarType + "](paramMap)"
 		source += formBean.MakeGetParameterSource(mine.GetNickImport()+"."+mine.VarType, mine.Name)
+		source += formBean.MakeValidateSource(mine.Name)
 		source += "\t\tvalidBody := validateForm(" + mine.Name + ")\n"
 		source += "\t\tif validBody != nil {\n"
 		source += "\t\t\twriteFieldError(writer, validBody)\n"

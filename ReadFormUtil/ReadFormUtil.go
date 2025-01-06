@@ -55,6 +55,9 @@ func readControllerPath(path string) FormBean {
 	//该结构体中的函数列表
 	var functions []FunctionBean
 
+	//表单验证
+	valids := make([]ValidateBean, 0)
+
 	index := 0
 	for index < len(lines) {
 		line := lines[index]
@@ -63,8 +66,17 @@ func readControllerPath(path string) FormBean {
 			index++
 			continue
 		}
-		if line[0] >= 65 && line[0] <= 90 { //首字母是大写,判定这是一个属性
+
+		//读取表单验证规则
+		validBean := readValidate(line)
+		if validBean != nil {
+			valids = append(valids, *validBean)
+		} else if line[0] >= 65 && line[0] <= 90 { //首字母是大写,判定这是一个属性
 			property := readProperty(line)
+			property.valids = valids
+
+			//清空当前属性的验证规则
+			valids = make([]ValidateBean, 0)
 			properties = append(properties, property)
 		} else if strings.HasPrefix(line, "func") { //这是一个函数
 			function := readFunction(line)
@@ -107,6 +119,41 @@ func readProperty(line string) PropertyBean {
 
 		//参数类型
 		VarType: words[1],
+	}
+}
+
+// 读取表单验证规则
+func readValidate(line string) *ValidateBean {
+
+	//去掉表单验证规则中多余的空格
+	line = strings.ReplaceAll(line, "// @", "//@")
+	if !strings.HasPrefix(line, "//@") { //这不是一个表单验证
+		return nil
+	}
+	line = line[3:]
+
+	//验证规则名称
+	validName := ""
+
+	//验证规则的参数
+	validArgs := make(map[string]string)
+	startKHIndex := strings.Index(line, "(")
+	if startKHIndex == -1 { //没有括号
+		validName = line
+	} else {
+		validName = line[0:startKHIndex]
+		validParamStr := line[startKHIndex+1 : strings.Index(line, ")")-1]
+		validParamArr := strings.Split(validParamStr, ",")
+		for _, it := range validParamArr {
+			kv := strings.Split(it, "=")
+			key := strings.TrimSpace(kv[0])
+			value := strings.TrimSpace(kv[1])
+			validArgs[key] = value
+		}
+	}
+	return &ValidateBean{
+		Name: strings.ToUpper(validName),
+		Args: validArgs,
 	}
 }
 
