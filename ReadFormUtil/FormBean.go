@@ -72,18 +72,23 @@ func (mine *FormBean) MakeGetParameterSource(formStructName string, paramName st
 }
 
 // 生成获取表单值的代码
-func (mine *FormBean) MakeValidateSource(formName string) string {
+func (mine *FormBean) MakeValidateSource() string {
 	source := ""
 	for _, property := range mine.Properties {
+		if len(property.valids) == 0 { //该属性不需要验证
+			continue
+		}
+		formField := strings.ToLower(property.Name[:1]) + property.Name[1:]
+		source += fmt.Sprintf("\t\tvalid%s := getStringArray(query, postForm, \"%s\")\n", property.Name, formField)
 		for _, validBean := range property.valids {
-			source += validBean.MakeValidSource(property.Name, formName+"."+property.Name)
+			source += validBean.MakeValidSource(property.Name)
 		}
 	}
 	if source != "" {
-		source = "\t\tfiledError := map[string]*[]string{}\n" + source
-		source += "\t\tif len(filedError) > 0{\n"
+		source = "\n\t\t// 记录表单验证错误信息\n\t\tfiledError := map[string]*[]string{}\n" + source
+		source += "\t\tif len(filedError) > 0{ // 有表单验证错误信息\n"
 		source += "\t\t\twriteFieldError(writer, filedError)\n\t\t\treturn\n"
-		source += "\t\t}\n"
+		source += "\t\t}\n\n"
 	}
 	return source
 }

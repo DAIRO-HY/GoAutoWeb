@@ -142,7 +142,7 @@ func readValidate(line string) *ValidateBean {
 		validName = line
 	} else {
 		validName = line[0:startKHIndex]
-		validParamStr := line[startKHIndex+1 : strings.Index(line, ")")-1]
+		validParamStr := line[startKHIndex+1 : strings.Index(line, ")")]
 		validParamArr := strings.Split(validParamStr, ",")
 		for _, it := range validParamArr {
 			kv := strings.Split(it, "=")

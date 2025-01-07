@@ -44,13 +44,13 @@ func (mine *ParamBean) MakeGetParameterSource() string {
 		formBean := ReadFormUtil.FormMap[mine.PackagePath+"/"+mine.VarType]
 
 		//source += "\n\t\t" + mine.Name + " := getForm[" + mine.GetNickImport() + "." + mine.VarType + "](paramMap)"
+		source += formBean.MakeValidateSource()
 		source += formBean.MakeGetParameterSource(mine.GetNickImport()+"."+mine.VarType, mine.Name)
-		source += formBean.MakeValidateSource(mine.Name)
-		source += "\t\tvalidBody := validateForm(" + mine.Name + ")\n"
-		source += "\t\tif validBody != nil {\n"
-		source += "\t\t\twriteFieldError(writer, validBody)\n"
-		source += "\t\t\treturn\n"
-		source += "\t\t}\n"
+		//source += "\t\tvalidBody := validateForm(" + mine.Name + ")\n"
+		//source += "\t\tif validBody != nil {\n"
+		//source += "\t\t\twriteFieldError(writer, validBody)\n"
+		//source += "\t\t\treturn\n"
+		//source += "\t\t}\n"
 		for _, function := range formBean.Functions {
 			source += function.MakeFormCheckSource(mine.Name)
 		}
