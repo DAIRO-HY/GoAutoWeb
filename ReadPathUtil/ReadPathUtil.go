@@ -89,23 +89,24 @@ func readTemplate(line string) []string {
 func readPath(line string) *PathBean {
 	trimLine := strings.ReplaceAll(line, " ", "")
 	trimLine = strings.ReplaceAll(trimLine, "\t", "")
+	trimLineUppercase := strings.ToUpper(trimLine) //忽略大小写
 
 	//标记改行是否有路由标记
 	var pathBean *PathBean
-	if strings.HasPrefix(trimLine, "//@post:") {
+	if strings.HasPrefix(trimLineUppercase, "//@POST:") {
 		pathBean = &PathBean{
-			Method: "post",
-			Path:   trimLine[8:],
+			HttpMethod: "POST",
+			Path:       trimLine[8:],
 		}
-	} else if strings.HasPrefix(trimLine, "//@get:") {
+	} else if strings.HasPrefix(trimLineUppercase, "//@GET:") {
 		pathBean = &PathBean{
-			Method: "get",
-			Path:   trimLine[7:],
+			HttpMethod: "GET",
+			Path:       trimLine[7:],
 		}
-	} else if strings.HasPrefix(trimLine, "//@request:") {
+	} else if strings.HasPrefix(trimLineUppercase, "//@REQUEST:") {
 		pathBean = &PathBean{
-			Method: "request",
-			Path:   trimLine[11:],
+			HttpMethod: "REQUEST",
+			Path:       trimLine[11:],
 		}
 	} else {
 		return nil

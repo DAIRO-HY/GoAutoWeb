@@ -11,8 +11,8 @@ type PathBean struct {
 	//包所在路径
 	PackagePath string
 
-	//请求方案
-	Method string
+	//Http请求方法
+	HttpMethod string
 
 	//路由路径
 	Path string
@@ -31,18 +31,27 @@ type PathBean struct {
 }
 
 // MakeHandleSource 生成Handle部分的代码
-func (mine *PathBean) MakeHandleSource() string {
-	return "\thttp.HandleFunc(\"" + mine.Path + "\", func(writer http.ResponseWriter, request *http.Request) {\n" +
-		ReadInterceptorUtil.MappingBefore(mine.Path) + //执行前拦截器
-		mine.getControllerParamSource() + // 获取Controller参数部分的代码
-		mine.getCallMethodSource() + // 生成调用函数部分的代码
-		ReadInterceptorUtil.MappingAfter(mine.Path) + //执行前拦截器
-		mine.getEndSource() +
-		"\t})\n"
+func (mine PathBean) MakeHandleSource() string {
+	source := ""
+	source += "\thttp.HandleFunc(\"" + mine.Path + "\", func(writer http.ResponseWriter, request *http.Request) {\n"
+	if mine.HttpMethod != "REQUEST" { //需要指定请求方法的情况
+		source += "\t\tif request.Method != \"" + mine.HttpMethod + "\" {\n"
+		source += "\t\t\twriter.WriteHeader(http.StatusMethodNotAllowed) // 设置状态码\n"
+		source += "\t\t\twriter.Write([]byte(\"Method Not Allowed\"))\n"
+		source += "\t\t\treturn\n"
+		source += "\t\t}\n"
+	}
+	source += ReadInterceptorUtil.MappingBefore(mine.Path) //执行前拦截器
+	source += mine.getControllerParamSource()              // 获取Controller参数部分的代码
+	source += mine.getCallMethodSource()                   // 生成调用函数部分的代码
+	source += ReadInterceptorUtil.MappingAfter(mine.Path)  //执行前拦截器
+	source += mine.getEndSource()
+	source += "\t})\n"
+	return source
 }
 
 // 获取导入昵称
-func (mine *PathBean) GetNickImport() string {
+func (mine PathBean) GetNickImport() string {
 	if len(mine.PackagePath) == 0 {
 		return ""
 	}
@@ -52,7 +61,7 @@ func (mine *PathBean) GetNickImport() string {
 }
 
 // 获取Controller参数部分的代码
-func (mine *PathBean) getControllerParamSource() string {
+func (mine PathBean) getControllerParamSource() string {
 	source := ""
 	for _, parameter := range mine.Parameters {
 		source += parameter.MakeGetParameterSource()
@@ -70,7 +79,7 @@ func (mine *PathBean) getControllerParamSource() string {
 }
 
 // 生成调用函数部分的代码
-func (mine *PathBean) getCallMethodSource() string {
+func (mine PathBean) getCallMethodSource() string {
 
 	//函数参数部分的代码
 	methodParamSource := ""
@@ -102,7 +111,7 @@ func (mine *PathBean) getCallMethodSource() string {
 }
 
 // 获取结尾部分调用代码
-func (mine *PathBean) getEndSource() string {
+func (mine PathBean) getEndSource() string {
 	if len(mine.Templates) > 0 { //这是一个html模板路由
 		source := ""
 		for _, template := range mine.Templates {
