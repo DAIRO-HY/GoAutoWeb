@@ -50,13 +50,13 @@ func readControllerPath(path string) FormBean {
 	lines := strings.Split(goCode, "\n")
 
 	//该结构体中的属性列表
-	var properties []PropertyBean
+	var properties []FormPropertyBean
 
 	//该结构体中的函数列表
-	var functions []FunctionBean
+	var functions []FormFunctionBean
 
 	//表单验证
-	valids := make([]ValidateBean, 0)
+	valids := make([]FormValidateBean, 0)
 
 	index := 0
 	for index < len(lines) {
@@ -76,7 +76,7 @@ func readControllerPath(path string) FormBean {
 			property.valids = valids
 
 			//清空当前属性的验证规则
-			valids = make([]ValidateBean, 0)
+			valids = make([]FormValidateBean, 0)
 			properties = append(properties, property)
 		} else if strings.HasPrefix(line, "func") { //这是一个函数
 			function := readFunction(line)
@@ -106,13 +106,13 @@ func readControllerPath(path string) FormBean {
 }
 
 // 读取结构体属性
-func readProperty(line string) PropertyBean {
+func readProperty(line string) FormPropertyBean {
 
 	//通过空格分隔单词
 	words := strings.Fields(line)
 
 	//结构体属性
-	return PropertyBean{
+	return FormPropertyBean{
 
 		//参数名
 		Name: words[0],
@@ -123,7 +123,7 @@ func readProperty(line string) PropertyBean {
 }
 
 // 读取表单验证规则
-func readValidate(line string) *ValidateBean {
+func readValidate(line string) *FormValidateBean {
 
 	//去掉表单验证规则中多余的空格
 	line = strings.ReplaceAll(line, "// @", "//@")
@@ -151,14 +151,14 @@ func readValidate(line string) *ValidateBean {
 			validArgs[key] = value
 		}
 	}
-	return &ValidateBean{
+	return &FormValidateBean{
 		Name: strings.ToUpper(validName),
 		Args: validArgs,
 	}
 }
 
 // 读取结构体函数
-func readFunction(line string) *FunctionBean {
+func readFunction(line string) *FormFunctionBean {
 	regResults := regexp.MustCompile("Form\\).+\\(").FindAllString(line, -1)
 	if len(regResults) == 0 { //这不是一个结构体函数
 		return nil
@@ -172,7 +172,7 @@ func readFunction(line string) *FunctionBean {
 	returnType = strings.TrimSpace(returnType)
 
 	//结构体函数
-	return &FunctionBean{
+	return &FormFunctionBean{
 
 		//函数名
 		Name: name,

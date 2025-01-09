@@ -6,7 +6,7 @@ import (
 )
 
 // 表单验证Bean
-type ValidateBean struct {
+type FormValidateBean struct {
 
 	//验证规则名称
 	Name string
@@ -16,7 +16,7 @@ type ValidateBean struct {
 }
 
 // 生成表单验证部分代码
-func (mine *ValidateBean) MakeValidSource(field string) string {
+func (mine FormValidateBean) MakeValidSource(field string) string {
 	formField := strings.ToLower(field[:1]) + field[1:]
 	source := ""
 	if mine.Name == "NOTEMPTY" { //非空验证
@@ -25,14 +25,10 @@ func (mine *ValidateBean) MakeValidSource(field string) string {
 		minlength := mine.Args["min"]
 		maxlength := mine.Args["max"]
 		if minlength == "" {
-			minlength = "nil"
-		} else {
-			minlength = "intP(" + minlength + ")"
+			minlength = "-1"
 		}
 		if maxlength == "" {
-			maxlength = "nil"
-		} else {
-			maxlength = "intP(" + maxlength + ")"
+			maxlength = "-1"
 		}
 		source += fmt.Sprintf("\t\tisLength(filedError, \"%s\", valid%s, %s, %s)// 输入长度验证\n", formField, field, minlength, maxlength)
 	} else if mine.Name == "LIMIT" { //数值值区间验证

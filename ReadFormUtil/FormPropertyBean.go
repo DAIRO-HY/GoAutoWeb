@@ -1,7 +1,7 @@
 package ReadFormUtil
 
 // 结构体属性Bean
-type PropertyBean struct {
+type FormPropertyBean struct {
 
 	//参数类型
 	VarType string
@@ -10,5 +10,5 @@ type PropertyBean struct {
 	Name string
 
 	/** 表单验证列表 **/
-	valids []ValidateBean
+	valids []FormValidateBean
 }

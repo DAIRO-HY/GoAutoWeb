@@ -3,7 +3,7 @@ package ReadFormUtil
 import "strings"
 
 // 结构体函数Bean
-type FunctionBean struct {
+type FormFunctionBean struct {
 
 	//函数名
 	Name string
@@ -13,7 +13,7 @@ type FunctionBean struct {
 }
 
 // 生成相关验证代码
-func (mine *FunctionBean) MakeFormCheckSource(paramName string) string {
+func (mine FormFunctionBean) MakeFormCheckSource(paramName string) string {
 	if !strings.HasPrefix(mine.Name, "Is") { //如果函数名不是以Is开头
 		return ""
 	}
@@ -32,8 +32,8 @@ func (mine *FunctionBean) MakeFormCheckSource(paramName string) string {
 	source := ""
 	msgVar := paramName + mine.Name + "Msg"
 	source += "\t\t" + msgVar + " := " + paramName + "." + mine.Name + "()\n"
-	source += "\t\tif " + msgVar + " != nil { // 表单相关验证失败\n"
-	source += "\t\t\twriteFieldFormError(writer, *" + msgVar + "," + fields + ")\n"
+	source += "\t\tif " + msgVar + " != \"\" { // 表单相关验证失败\n"
+	source += "\t\t\twriteFieldFormError(writer, " + msgVar + "," + fields + ")\n"
 	source += "\t\t\treturn\n"
 	source += "\t\t}\n"
 	return source

@@ -12,10 +12,10 @@ type FormBean struct {
 	PackagePath string
 
 	//属性列表
-	Properties []PropertyBean
+	Properties []FormPropertyBean
 
 	//结构体函数列表
-	Functions []FunctionBean
+	Functions []FormFunctionBean
 
 	//结构体名
 	Name string
@@ -85,7 +85,7 @@ func (mine *FormBean) MakeValidateSource() string {
 		}
 	}
 	if source != "" {
-		source = "\n\t\t// 记录表单验证错误信息\n\t\tfiledError := map[string]*[]string{}\n" + source
+		source = "\n\t\t// 记录表单验证错误信息\n\t\tfiledError := map[string][]string{}\n" + source
 		source += "\t\tif len(filedError) > 0{ // 有表单验证错误信息\n"
 		source += "\t\t\twriteFieldError(writer, filedError)\n\t\t\treturn\n"
 		source += "\t\t}\n\n"
