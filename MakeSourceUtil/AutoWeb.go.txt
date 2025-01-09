@@ -182,6 +182,19 @@ func isNotEmpty(fieldError map[string][]string, field string, value []string) {
 	}
 }
 
+// 非空白字符检查
+func isNotBlank(fieldError map[string][]string, field string, value []string) {
+	message := "不能为空白"
+	if value == nil {
+		addFieldErr(fieldError, field, message)
+		return
+	}
+	if len(strings.TrimSpace(value[0])) == 0 { //判断是否为空字符串
+		addFieldErr(fieldError, field, message)
+		return
+	}
+}
+
 // 输入长度检查
 func isLength(fieldError map[string][]string, field string, value []string, min int, max int) {
 

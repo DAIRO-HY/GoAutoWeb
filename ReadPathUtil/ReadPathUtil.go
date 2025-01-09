@@ -52,6 +52,9 @@ func readControllerPath(path string) []PathBean {
 				index++
 				line = lines[index]
 				line = strings.TrimSpace(line)
+
+				findLine := strings.ReplaceAll(line, "// @", "//@")
+				findLine = strings.ToUpper(findLine)
 				if strings.HasPrefix(line, "func") {
 					for !strings.Contains(line, "{") { //如果该行没有{，说明函数的参数已换行处理
 						index++
@@ -63,7 +66,7 @@ func readControllerPath(path string) []PathBean {
 					pathBean.FuncName = readFuncName(line)
 					pathBean.ReturnType = readReturnType(line)
 					break
-				} else if strings.Contains(line, "@templates:") {
+				} else if strings.HasPrefix(findLine, "//@TEMPLATES:") {
 					pathBean.Templates = readTemplate(line)
 				} else {
 				}

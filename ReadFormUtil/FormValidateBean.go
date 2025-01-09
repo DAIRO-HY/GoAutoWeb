@@ -21,6 +21,8 @@ func (mine FormValidateBean) MakeValidSource(field string) string {
 	source := ""
 	if mine.Name == "NOTEMPTY" { //非空验证
 		source += fmt.Sprintf("\t\tisNotEmpty(filedError, \"%s\", valid%s) // 非空验证\n", formField, field)
+	} else if mine.Name == "NOTBLANK" { //非空白验证
+		source += fmt.Sprintf("\t\tisNotBlank(filedError, \"%s\", valid%s) // 非空白验证\n", formField, field)
 	} else if mine.Name == "LENGTH" { //长度验证代码
 		minlength := mine.Args["min"]
 		maxlength := mine.Args["max"]
