@@ -6,14 +6,17 @@ import (
 	"GoAutoWeb/ReadFormUtil"
 	"GoAutoWeb/ReadInterceptorUtil"
 	"GoAutoWeb/ReadPathUtil"
+	"GoAutoWeb/ReadTemplateUtil"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 const VERSION = "1.0.0"
 
 func main() {
+	start := time.Now()
 	if len(os.Args) == 1 {
 		currentFolder := os.Args[0]
 		currentFolder = strings.ReplaceAll(currentFolder, "\\", "/")
@@ -33,6 +36,10 @@ func main() {
 	//生成Form表单列表
 	ReadFormUtil.Make()
 
+	//生成模板数据
+	ReadTemplateUtil.Make()
+
 	//生成代码
 	MakeSourceUtil.Make()
+	fmt.Printf("本次耗时：%s", time.Since(start))
 }

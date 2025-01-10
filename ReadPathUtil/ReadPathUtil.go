@@ -38,83 +38,93 @@ func readControllerPath(path string) []PathBean {
 	lines := strings.Split(goCode, "\n")
 
 	var pathList []PathBean
-	index := 0
-	for index < len(lines) {
-		line := lines[index]
-
-		// 解析路由
-		pathBean := readPath(line)
-		if pathBean != nil {
-
-			//设置包所在路径
-			pathBean.PackagePath = packagePath
-			for {
-				index++
-				line = lines[index]
-				line = strings.TrimSpace(line)
-
-				findLine := strings.ReplaceAll(line, "// @", "//@")
-				findLine = strings.ToUpper(findLine)
-				if strings.HasPrefix(line, "func") {
-					for !strings.Contains(line, "{") { //如果该行没有{，说明函数的参数已换行处理
-						index++
-						line += strings.TrimSpace(lines[index])
-					}
-
-					// 读取参数
-					pathBean.Parameters = readParameter(pathBean.PackagePath, line)
-					pathBean.FuncName = readFuncName(line)
-					pathBean.ReturnType = readReturnType(line)
-					break
-				} else if strings.HasPrefix(findLine, "//@TEMPLATES:") {
-					pathBean.Templates = readTemplate(line)
-				} else {
-				}
-			}
-			pathList = append(pathList, *pathBean)
+	pathBean := &PathBean{}
+	group := "" //分组名
+	for index, line := range lines {
+		if group == "" {
+			group = readGroup(line)
 		}
-		index++
+		readPath(line, pathBean)                          // 解析路由
+		readHtml(line, pathBean)                          //解析html页面
+		readFunction(index, lines, packagePath, pathBean) //读取调用的函数
+		if pathBean.FuncName != "" {                      //已经读取到了调用的函数
+			if pathBean.HttpMethod == "" && pathBean.Html != "" { //如果有配置html页面，但没有配置HTTP请求方式，则将html路径作为路由
+				pathBean.HttpMethod = "GET"
+				if strings.HasPrefix(pathBean.Html, ".") {
+					pathBean.Path = pathBean.Html
+				} else {
+					pathBean.Path = "/" + pathBean.Html
+				}
+				pathBean.Html = group + pathBean.Html
+			}
+			if pathBean.HttpMethod != "" { //路由标记的才是对象
+				pathBean.PackagePath = packagePath
+				pathBean.Path = group + pathBean.Path
+				pathList = append(pathList, *pathBean)
+			}
+			pathBean = &PathBean{}
+		}
 	}
 	return pathList
 }
 
-// 读取要使用template模板（html专用）
-func readTemplate(line string) []string {
-	lineArr := strings.Split(line, ":")
-	templates := strings.Split(lineArr[1], ",")
-	for i, template := range templates { //去掉空格
-		templates[i] = strings.TrimSpace(template)
+// 解析路由
+func readGroup(line string) string {
+	trimLine := strings.ReplaceAll(line, " ", "")
+	trimLine = strings.TrimSpace(trimLine)
+	trimLineUppercase := strings.ToUpper(trimLine)         //忽略大小写
+	if strings.HasPrefix(trimLineUppercase, "//@GROUP:") { //读取到一个分组
+		return trimLine[strings.Index(trimLine, ":")+1:]
 	}
-	return templates
+	return ""
 }
 
 // 解析路由
-func readPath(line string) *PathBean {
+func readPath(line string, bean *PathBean) {
 	trimLine := strings.ReplaceAll(line, " ", "")
-	trimLine = strings.ReplaceAll(trimLine, "\t", "")
+	trimLine = strings.TrimSpace(trimLine)
 	trimLineUppercase := strings.ToUpper(trimLine) //忽略大小写
 
 	//标记改行是否有路由标记
-	var pathBean *PathBean
 	if strings.HasPrefix(trimLineUppercase, "//@POST:") {
-		pathBean = &PathBean{
-			HttpMethod: "POST",
-			Path:       trimLine[8:],
-		}
+		bean.HttpMethod = "POST"
+		bean.Path = trimLine[strings.Index(trimLine, ":")+1:]
 	} else if strings.HasPrefix(trimLineUppercase, "//@GET:") {
-		pathBean = &PathBean{
-			HttpMethod: "GET",
-			Path:       trimLine[7:],
-		}
+		bean.HttpMethod = "GET"
+		bean.Path = trimLine[strings.Index(trimLine, ":")+1:]
 	} else if strings.HasPrefix(trimLineUppercase, "//@REQUEST:") {
-		pathBean = &PathBean{
-			HttpMethod: "REQUEST",
-			Path:       trimLine[11:],
-		}
+		bean.HttpMethod = "REQUEST"
+		bean.Path = trimLine[strings.Index(trimLine, ":")+1:]
 	} else {
-		return nil
 	}
-	return pathBean
+}
+
+// 读取页面html配置
+func readHtml(line string, bean *PathBean) {
+	lineUppercase := strings.ToUpper(line) //忽略大小写
+	lineUppercase = strings.ReplaceAll(lineUppercase, " ", "")
+	if !strings.Contains(lineUppercase, "@HTML:") {
+		return
+	}
+	html := line[strings.Index(line, ":")+1:]
+	bean.Html = strings.TrimSpace(html)
+}
+
+// 读取调用的函数
+func readFunction(index int, lines []string, packagePath string, bean *PathBean) {
+	line := strings.TrimSpace(lines[index])
+	if !strings.HasPrefix(line, "func") {
+		return
+	}
+	for !strings.Contains(line, "{") { //如果该行没有{，说明函数的参数已换行处理
+		index++
+		line += strings.TrimSpace(lines[index])
+	}
+
+	// 读取参数
+	bean.Parameters = readParameter(packagePath, line)
+	bean.FuncName = readFuncName(line)
+	bean.ReturnType = readReturnType(line)
 }
 
 // 读取参数

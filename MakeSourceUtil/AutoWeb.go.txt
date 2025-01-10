@@ -462,7 +462,7 @@ func writeToResponse(writer http.ResponseWriter, body any) {
 }
 
 // 写入html模板
-func writeToTemplate(writer http.ResponseWriter, templates []string, data any) {
+func writeToTemplate(writer http.ResponseWriter, data any, templates ...string) {
 
 	// 解析嵌入的模板
 	t, err := template.ParseFS(templatesFiles, templates...)
