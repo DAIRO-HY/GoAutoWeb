@@ -141,6 +141,9 @@ func readParameter(goPackagePath string, line string) []ParamBean {
 			continue
 		}
 		paramInfoArr := strings.Split(param, " ")
+		if len(paramInfoArr) < 2 { //这不是一个正常的参数
+			continue
+		}
 		varType := paramInfoArr[1]
 		packagePath := ""
 		if strings.HasPrefix(varType, "form.") {

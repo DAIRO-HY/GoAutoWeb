@@ -42,6 +42,9 @@ func readName(path string) []string {
 
 // 从html文件中获取使用到模板名
 func ReadUseTemplatesByHtml(html string) string {
+	if html == "" {
+		return ""
+	}
 	if strings.HasPrefix(html, "/") {
 		html = html[1:] //去掉前面的斜杠
 	}
@@ -65,9 +68,11 @@ func ReadUseTemplatesByHtml(html string) string {
 			useTemplateNames = append(useTemplateNames, name)
 		}
 	}
-	if len(useTemplateNames) == 0 {
-		return ""
-	}
+	//if len(useTemplateNames) == 0 {
+	//	return ""
+	//}
+
+	//去除重复的引用
 	templatePathMap := map[string]bool{}
 	for _, it := range useTemplateNames {
 		templatePath := TemplateNameToPath[it]
