@@ -46,13 +46,19 @@ func startWebServer(port int) {
 	}
 }
 
-// 获取string数组类型的参数
-func getStringArray(query url.Values, postForm url.Values, key string) []string {
-	value, isExists := postForm[key]
-	if isExists {
-		return value
+// 获取表单参数，包括GET，POST
+func getRequestFormData(request *http.Request) url.Values {
+	form := request.Form
+	if form == nil {
+		request.ParseMultipartForm(32 << 20) // 小于等于 32MB 的部分存储在内存中。超过 32MB 的部分会存储在临时文件中（磁盘上）。
+		form = request.Form
 	}
-	value, isExists = query[key]
+	return form
+}
+
+// 获取string数组类型的参数
+func getStringArray(form url.Values, key string) []string {
+	value, isExists := form[key]
 	if isExists {
 		return value
 	}
@@ -60,8 +66,8 @@ func getStringArray(query url.Values, postForm url.Values, key string) []string 
 }
 
 // 获取int数组类型的参数
-func getIntArray(query url.Values, postForm url.Values, key string) []int {
-	valueArray := getStringArray(query, postForm, key)
+func getIntArray(form url.Values, key string) []int {
+	valueArray := getStringArray(form, key)
 	if valueArray == nil {
 		return nil
 	}
@@ -73,8 +79,8 @@ func getIntArray(query url.Values, postForm url.Values, key string) []int {
 }
 
 // 获取int8数组类型的参数
-func getInt8Array(query url.Values, postForm url.Values, key string) []int8 {
-	valueArray := getStringArray(query, postForm, key)
+func getInt8Array(form url.Values, key string) []int8 {
+	valueArray := getStringArray(form, key)
 	if valueArray == nil {
 		return nil
 	}
@@ -87,8 +93,8 @@ func getInt8Array(query url.Values, postForm url.Values, key string) []int8 {
 }
 
 // 获取int16数组类型的参数
-func getInt16Array(query url.Values, postForm url.Values, key string) []int16 {
-	valueArray := getStringArray(query, postForm, key)
+func getInt16Array(form url.Values, key string) []int16 {
+	valueArray := getStringArray(form, key)
 	if valueArray == nil {
 		return nil
 	}
@@ -101,8 +107,8 @@ func getInt16Array(query url.Values, postForm url.Values, key string) []int16 {
 }
 
 // 获取int32数组类型的参数
-func getInt32Array(query url.Values, postForm url.Values, key string) []int32 {
-	valueArray := getStringArray(query, postForm, key)
+func getInt32Array(form url.Values, key string) []int32 {
+	valueArray := getStringArray(form, key)
 	if valueArray == nil {
 		return nil
 	}
@@ -115,8 +121,8 @@ func getInt32Array(query url.Values, postForm url.Values, key string) []int32 {
 }
 
 // 获取int64数组类型的参数
-func getInt64Array(query url.Values, postForm url.Values, key string) []int64 {
-	valueArray := getStringArray(query, postForm, key)
+func getInt64Array(form url.Values, key string) []int64 {
+	valueArray := getStringArray(form, key)
 	if valueArray == nil {
 		return nil
 	}
@@ -129,8 +135,8 @@ func getInt64Array(query url.Values, postForm url.Values, key string) []int64 {
 }
 
 // 获取float32数组类型的参数
-func getFloat32Array(query url.Values, postForm url.Values, key string) []float32 {
-	valueArray := getStringArray(query, postForm, key)
+func getFloat32Array(form url.Values, key string) []float32 {
+	valueArray := getStringArray(form, key)
 	if valueArray == nil {
 		return nil
 	}
@@ -143,8 +149,8 @@ func getFloat32Array(query url.Values, postForm url.Values, key string) []float3
 }
 
 // 获取float64数组类型的参数
-func getFloat64Array(query url.Values, postForm url.Values, key string) []float64 {
-	valueArray := getStringArray(query, postForm, key)
+func getFloat64Array(form url.Values, key string) []float64 {
+	valueArray := getStringArray(form, key)
 	if valueArray == nil {
 		return nil
 	}
@@ -157,8 +163,8 @@ func getFloat64Array(query url.Values, postForm url.Values, key string) []float6
 }
 
 // 获取Bool数组类型的参数
-func getBoolArray(query url.Values, postForm url.Values, key string) []bool {
-	valueArray := getStringArray(query, postForm, key)
+func getBoolArray(form url.Values, key string) []bool {
+	valueArray := getStringArray(form, key)
 	if valueArray == nil {
 		return nil
 	}

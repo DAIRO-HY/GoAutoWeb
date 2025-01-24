@@ -78,7 +78,7 @@ func (mine *ParamBean) MakeGetParameterSource() string {
 		} else { //字符串类型的变量
 			callMethodName = "getStringArray"
 		}
-		source += fmt.Sprintf("\t\t%sArr := %s(query, postForm, \"%s\")\n", mine.Name, callMethodName, mine.Name)
+		source += fmt.Sprintf("\t\t%sArr := %s(requestFormData, \"%s\")\n", mine.Name, callMethodName, mine.Name)
 		source += fmt.Sprintf("\t\tif %sArr != nil { // 如果参数存在\n", mine.Name)
 		if strings.HasPrefix(mine.VarType, "*") { //这是一个指针类型
 			source += fmt.Sprintf("\t\t\t%s = &%sArr[0]\n", mine.Name, mine.Name)

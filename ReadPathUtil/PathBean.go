@@ -69,11 +69,7 @@ func (mine PathBean) getControllerParamSource() string {
 	}
 	if len(source) > 0 { //生成URL参数和Body参数变量代码
 		queryAndPostFormVarSource := ""
-		queryAndPostFormVarSource += "\t\tquery := request.URL.Query()\n"
-		queryAndPostFormVarSource += "\t\t//解析post表单\n"
-		queryAndPostFormVarSource += "\t\trequest.ParseForm()\n"
-		queryAndPostFormVarSource += "\t\tpostForm := request.PostForm\n"
-
+		queryAndPostFormVarSource += "\t\trequestFormData := getRequestFormData(request) //获取表单数据\n"
 		source = queryAndPostFormVarSource + source
 	}
 	return source

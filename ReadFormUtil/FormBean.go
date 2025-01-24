@@ -57,7 +57,7 @@ func (mine *FormBean) MakeGetParameterSource(formStructName string, paramName st
 		} else { //字符串类型的变量
 			callMethodName = "getStringArray"
 		}
-		source += fmt.Sprintf("\t\t%s := %s(query,postForm,\"%s\")\n", paramName+it.Name, callMethodName, key)
+		source += fmt.Sprintf("\t\t%s := %s(requestFormData, \"%s\")\n", paramName+it.Name, callMethodName, key)
 		source += fmt.Sprintf("\t\tif %s != nil {// 如果参数存在\n", paramName+it.Name)
 		if strings.HasPrefix(it.VarType, "*") { //这是一个指针类型
 			source += fmt.Sprintf("\t\t\t%s.%s = &%s[0]\n", paramName, it.Name, paramName+it.Name)
@@ -79,7 +79,7 @@ func (mine *FormBean) MakeValidateSource() string {
 			continue
 		}
 		formField := strings.ToLower(property.Name[:1]) + property.Name[1:]
-		source += fmt.Sprintf("\t\tvalid%s := getStringArray(query, postForm, \"%s\")\n", property.Name, formField)
+		source += fmt.Sprintf("\t\tvalid%s := getStringArray(requestFormData, \"%s\")\n", property.Name, formField)
 		for _, validBean := range property.valids {
 			source += validBean.MakeValidSource(property.Name)
 		}
