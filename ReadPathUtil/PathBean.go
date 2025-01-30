@@ -3,6 +3,8 @@ package ReadPathUtil
 import (
 	"GoAutoWeb/ReadInterceptorUtil"
 	"GoAutoWeb/ReadTemplateUtil"
+	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -63,9 +65,25 @@ func (mine PathBean) GetNickImport() string {
 
 // 获取Controller参数部分的代码
 func (mine PathBean) getControllerParamSource() string {
+	pathVarList := mine.getPathVariableList()
 	source := ""
+	if len(pathVarList) > 0 { //如果有路径参数
+		source += `
+		pathVariables := make([]string, 0)
+		varPath := request.URL.Path[10:]
+		for index, it := range []string{"/", "-", "/", "+", "/", "_", "/", "|", "/", "/", "/"} {
+			varPathSplitIndex := strings.Index(varPath,it)
+			pathVariables[index] = varPath[:varPathSplitIndex]
+			varPath = varPath[varPathSplitIndex:]
+		}` + "\n"
+	}
 	for _, parameter := range mine.Parameters {
-		source += parameter.MakeGetParameterSource()
+		if slices.Contains(pathVarList, parameter.Name) { //这是一个url路径参数
+			index := slices.Index(pathVarList, parameter.Name)
+			source += parameter.MakeGetPathVariableSource(index)
+		} else {
+			source += parameter.MakeGetParameterSource()
+		}
 	}
 	if len(source) > 0 { //生成URL参数和Body参数变量代码
 		queryAndPostFormVarSource := ""
@@ -115,4 +133,14 @@ func (mine PathBean) makeWriteToSource() string {
 	} else {
 		return "\t\twriteToResponse(writer, body)\n"
 	}
+}
+
+// 获取url参数名名称
+func (mine PathBean) getPathVariableList() []string {
+	pathVarList := make([]string, 0)
+	findResults := regexp.MustCompile(`\{([^}]+)\}`).FindAllString(mine.Path, -1)
+	for _, it := range findResults {
+		pathVarList = append(pathVarList, it[1:len(it)-1])
+	}
+	return pathVarList
 }

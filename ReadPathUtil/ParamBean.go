@@ -91,3 +91,41 @@ func (mine *ParamBean) MakeGetParameterSource() string {
 	}
 	return source
 }
+
+// 生成获取路径参数的代码
+func (mine *ParamBean) MakeGetPathVariableSource(index int) string {
+	source := ""
+
+	//初始化变量
+	//source += fmt.Sprintf("\t\tvar %s %s // 初始化变量\n", mine.Name, mine.VarType)
+	if strings.HasSuffix(mine.VarType, "int") { //int类型的变量
+		source += fmt.Sprintf("\t\t%sStr := pathVariables[%d]\n", mine.Name, index)
+		source += fmt.Sprintf("\t\t%s,_ := strconv.Atoi(%s)\n", mine.Name, mine.Name+"Str")
+	} else if strings.HasSuffix(mine.VarType, "int8") { //int类型的变量
+		source += fmt.Sprintf("\t\t%sStr := pathVariables[%d]\n", mine.Name, index)
+		source += fmt.Sprintf("\t\t%sInt8,_ := strconv.Atoi(%s)\n", mine.Name, mine.Name+"Str")
+		source += fmt.Sprintf("\t\t%s := int8(%s)\n", mine.Name, mine.Name+"Int8")
+	} else if strings.HasSuffix(mine.VarType, "int16") { //int16类型的变量
+		source += fmt.Sprintf("\t\t%sStr := pathVariables[%d]\n", mine.Name, index)
+		source += fmt.Sprintf("\t\t%sInt16,_ := strconv.Atoi(%s)\n", mine.Name, mine.Name+"Str")
+		source += fmt.Sprintf("\t\t%s := int16(%s)\n", mine.Name, mine.Name+"Int16")
+	} else if strings.HasSuffix(mine.VarType, "int32") { //int32类型的变量
+		source += fmt.Sprintf("\t\t%sStr := pathVariables[%d]\n", mine.Name, index)
+		source += fmt.Sprintf("\t\t%sInt32,_ := strconv.Atoi(%s)\n", mine.Name, mine.Name+"Str")
+		source += fmt.Sprintf("\t\t%s := int32(%s)\n", mine.Name, mine.Name+"Int32")
+	} else if strings.HasSuffix(mine.VarType, "int64") { //int64类型的变量
+		source += fmt.Sprintf("\t\t%sStr := pathVariables[%d]\n", mine.Name, index)
+		source += fmt.Sprintf("\t\t%s,_ := strconv.ParseInt(%s,10,64)\n", mine.Name, mine.Name+"Str")
+	} else if strings.HasSuffix(mine.VarType, "float32") { //float32类型的变量
+	} else if strings.HasSuffix(mine.VarType, "float64") { //float64类型的变量
+	} else if strings.HasSuffix(mine.VarType, "bool") { //bool类型的变量
+	} else { //字符串类型的变量
+		source += fmt.Sprintf("\t\t%s := pathVariables[%d]\n", mine.Name, index)
+	}
+	if strings.HasPrefix(mine.VarType, "*") { //这是一个指针类型
+		source += fmt.Sprintf("\t\t\t%s = &%sArr[0]\n", mine.Name, mine.Name)
+	}
+	//source += "\t\t\n"
+
+	return source
+}
