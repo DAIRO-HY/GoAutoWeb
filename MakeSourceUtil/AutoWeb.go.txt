@@ -35,8 +35,24 @@ func startWebServer(port int) {
 		panic(staticErr)
 	}
 
+	// 自定义的 HandlerFunc，用于添加缓存头部
+	cacheHeaders := func(h http.Handler) http.HandlerFunc {
+		return func(writer http.ResponseWriter, request *http.Request) {
+
+			// 设置Cache-Control头，配置缓存（1年）
+			writer.Header().Set("Cache-Control", "public, max-age=31536000, s-maxage=31536000, immutable")
+
+			// 设置Expires头，配置为1年后的时间
+			expiresTime := time.Now().AddDate(1, 0, 0).Format(time.RFC1123)
+			writer.Header().Set("Expires", expiresTime)
+
+			// 调用原始的 Handler
+			h.ServeHTTP(writer, request)
+		}
+	}
+
 	// 使用 http.FileServer 提供文件服务
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
+	http.Handle("/static/", cacheHeaders(http.StripPrefix("/static/", http.FileServer(http.FS(staticFS)))))
 
 //{BODY}
 	// 启动服务器

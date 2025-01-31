@@ -59,8 +59,8 @@ func MappingAfter(path string) string {
 func mappingInterceptor(path string, includes []string, excludes []string) bool {
 	isInterceptor := false
 	for _, include := range includes { //从包含路由中匹配
-		if strings.HasSuffix(include, "**") { //匹配所有子路由
-			if strings.HasPrefix(path, include[:len(include)-2]) {
+		if strings.Contains(include, "**") { //匹配所有子路由
+			if strings.HasPrefix(path, include[:strings.Index(include, "**")]) && strings.HasSuffix(path, include[strings.Index(include, "**")+2:]) {
 				isInterceptor = true
 			}
 		} else if strings.HasSuffix(include, "*") { //只匹配子路由
