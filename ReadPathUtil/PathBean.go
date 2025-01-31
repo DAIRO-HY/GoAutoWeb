@@ -175,7 +175,7 @@ func (mine PathBean) getPathVariableListSource() string {
 		` + hasSuffixSource + `
 		for i := 0; i < len(pathVariableSplitArr)-1; i++ {
 			varPath = varPath[len(pathVariableSplitArr[i]):]
-			if pathVariableSplitArr[i+1] == "" { //是一个以路由参数结尾路径
+			if pathVariableSplitArr[i+1] == "" { //这已经是最后一个参数了
 				pathVariables = append(pathVariables, varPath)
 			} else {
 				nextIndex := strings.Index(varPath, pathVariableSplitArr[i+1])
@@ -184,6 +184,7 @@ func (mine PathBean) getPathVariableListSource() string {
 					return
 				}
 				pathVariables = append(pathVariables, varPath[:nextIndex])
+				varPath = varPath[nextIndex:]
 			}
 		}` + "\n"
 }
