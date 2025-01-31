@@ -5,6 +5,7 @@ import (
 	"GoAutoWeb/ReadTemplateUtil"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -19,6 +20,9 @@ type PathBean struct {
 
 	//路由路径
 	Path string
+
+	//路由参数路径
+	VariablePath string
 
 	//函数名
 	FuncName string
@@ -65,32 +69,24 @@ func (mine PathBean) GetNickImport() string {
 
 // 获取Controller参数部分的代码
 func (mine PathBean) getControllerParamSource() string {
-	pathVarList := mine.getPathVariableList()
-	source := ""
-	if len(pathVarList) > 0 { //如果有路径参数
-		source += `
-		pathVariables := make([]string, 0)
-		varPath := request.URL.Path[10:]
-		for index, it := range []string{"/", "-", "/", "+", "/", "_", "/", "|", "/", "/", "/"} {
-			varPathSplitIndex := strings.Index(varPath,it)
-			pathVariables[index] = varPath[:varPathSplitIndex]
-			varPath = varPath[varPathSplitIndex:]
-		}` + "\n"
-	}
+	pathVariableList := mine.getPathVariableList()
+	getFormParamtaSource := ""  //获取表单参数部分代码
+	getPathVariableSource := "" //获取路由参数部分代码
 	for _, parameter := range mine.Parameters {
-		if slices.Contains(pathVarList, parameter.Name) { //这是一个url路径参数
-			index := slices.Index(pathVarList, parameter.Name)
-			source += parameter.MakeGetPathVariableSource(index)
+		if slices.Contains(pathVariableList, parameter.Name) { //这是一个url路径参数
+			index := slices.Index(pathVariableList, parameter.Name)
+			getPathVariableSource += parameter.MakeGetPathVariableSource(index)
 		} else {
-			source += parameter.MakeGetParameterSource()
+			getFormParamtaSource += parameter.MakeGetParameterSource()
 		}
 	}
-	if len(source) > 0 { //生成URL参数和Body参数变量代码
-		queryAndPostFormVarSource := ""
-		queryAndPostFormVarSource += "\t\trequestFormData := getRequestFormData(request) //获取表单数据\n"
-		source = queryAndPostFormVarSource + source
+	if len(getFormParamtaSource) > 0 { //生成URL参数和Body参数变量代码
+		getFormParamtaSource = "\t\trequestFormData := getRequestFormData(request) //获取表单数据\n" + getFormParamtaSource
 	}
-	return source
+	if len(getPathVariableSource) > 0 { //如果有路径参数
+		getPathVariableSource = mine.getPathVariableListSource() + getPathVariableSource
+	}
+	return getFormParamtaSource + getPathVariableSource
 }
 
 // 生成调用函数部分的代码
@@ -138,9 +134,56 @@ func (mine PathBean) makeWriteToSource() string {
 // 获取url参数名名称
 func (mine PathBean) getPathVariableList() []string {
 	pathVarList := make([]string, 0)
-	findResults := regexp.MustCompile(`\{([^}]+)\}`).FindAllString(mine.Path, -1)
+	findResults := regexp.MustCompile(`\{([^}]+)\}`).FindAllString(mine.VariablePath, -1)
 	for _, it := range findResults {
 		pathVarList = append(pathVarList, it[1:len(it)-1])
 	}
 	return pathVarList
+}
+
+// 获取路由参数数组部分的代码
+func (mine PathBean) getPathVariableListSource() string {
+
+	// 定义正则表达式，匹配所有被 {} 包围的内容
+	re := regexp.MustCompile(`\{[^}]+\}`)
+
+	// 使用 ReplaceAllString 方法将所有匹配的内容替换为空格
+	replacePath := re.ReplaceAllString(mine.VariablePath, " ")
+	pathVariableSplits := strings.Split(replacePath, " ")
+	pathVariableSplitStr := strings.Join(pathVariableSplits, `", "`)
+
+	hasPrefixSource := ""
+	hasSuffixSource := ""
+	if pathVariableSplits[0] != "" {
+		hasPrefixSource = `if !strings.HasPrefix(varPath, "` + pathVariableSplits[0] + `") { //如果不是以指定的字符串开头
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}`
+	}
+	if pathVariableSplits[len(pathVariableSplits)-1] != "" {
+		hasSuffixSource = `if !strings.HasSuffix(varPath, "` + pathVariableSplits[len(pathVariableSplits)-1] + `") {//如果不是以指定的字符串结尾
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}`
+	}
+
+	return `
+		pathVariables := make([]string, 0)
+		varPath := request.URL.Path[` + strconv.Itoa(len(mine.Path)) + `:]
+		pathVariableSplitArr := []string{"` + pathVariableSplitStr + `"}
+		` + hasPrefixSource + `
+		` + hasSuffixSource + `
+		for i := 0; i < len(pathVariableSplitArr)-1; i++ {
+			varPath = varPath[len(pathVariableSplitArr[i]):]
+			if pathVariableSplitArr[i+1] == "" { //是一个以路由参数结尾路径
+				pathVariables = append(pathVariables, varPath)
+			} else {
+				nextIndex := strings.Index(varPath, pathVariableSplitArr[i+1])
+				if nextIndex == -1 {
+					writer.WriteHeader(http.StatusNotFound)
+					return
+				}
+				pathVariables = append(pathVariables, varPath[:nextIndex])
+			}
+		}` + "\n"
 }

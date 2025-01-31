@@ -59,7 +59,19 @@ func readControllerPath(path string) []PathBean {
 			}
 			if pathBean.HttpMethod != "" { //路由标记的才是对象
 				pathBean.PackagePath = packagePath
-				pathBean.Path = group + pathBean.Path
+
+				//判断path中有没有参数路由
+				path = group + pathBean.Path
+				pathVariableStartSplitCharIndex := strings.Index(path, "{")
+				if pathVariableStartSplitCharIndex != -1 { //有路由参数
+
+					//获取路由参数之前的最后一个路径分隔符位置
+					lastPathIndex := strings.LastIndex(path[:pathVariableStartSplitCharIndex], "/") + 1
+					pathBean.Path = path[:lastPathIndex]
+					pathBean.VariablePath = path[lastPathIndex:]
+				} else {
+					pathBean.Path = path
+				}
 				pathList = append(pathList, *pathBean)
 			}
 			pathBean = &PathBean{}
