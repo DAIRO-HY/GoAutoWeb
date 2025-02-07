@@ -48,6 +48,7 @@ func (mine PathBean) MakeHandleSource() string {
 		source += "\t\t\treturn\n"
 		source += "\t\t}\n"
 	}
+	source += "\t\tvar body any = nil\n"
 	source += ReadInterceptorUtil.MappingBefore(mine.Path) //执行前拦截器
 	source += mine.getControllerParamSource()              // 获取Controller参数部分的代码
 	source += mine.getCallMethodSource()                   // 生成调用函数部分的代码
@@ -112,7 +113,8 @@ func (mine PathBean) getCallMethodSource() string {
 	//调用Controller代码
 	callMethodSource := mine.GetNickImport() + "." + mine.FuncName + "(" + methodParamSource + ")"
 
-	source := "\t\tvar body any = nil\n"
+	//source := "\t\tvar body any = nil\n"
+	source := ""
 	if len(mine.ReturnType) > 0 { //如果有返回值
 		source += "\t\tbody = " + callMethodSource
 	} else {
