@@ -6,6 +6,7 @@ import (
 	"GoAutoWeb/ReadInterceptorUtil"
 	"GoAutoWeb/ReadPathUtil"
 	_ "embed"
+	"fmt"
 	"sort"
 	"strings"
 )
@@ -25,8 +26,19 @@ func Make() {
 // 生成Handle部分代码
 func makeHandleBody() string {
 	source := ""
-	for _, pathBean := range ReadPathUtil.PathList {
-		source += pathBean.MakeHandleSource()
+	//for _, pathBean := range ReadPathUtil.PathList {
+	//	source += pathBean.MakeHandleSource()
+	//}
+
+	//遍历所有的路由
+	for path, list := range ReadPathUtil.PathMap {
+		source += fmt.Sprintf("\thttp.HandleFunc(\"%s\", func(writer http.ResponseWriter, request *http.Request) {\n", path)
+		for _, pb := range list {
+			source += pb.MakeHandleSource()
+		}
+		source += `		writer.WriteHeader(http.StatusNotFound) // 设置状态码"
+	})
+`
 	}
 	return source
 }

@@ -93,7 +93,7 @@ func (mine *ParamBean) MakeGetParameterSource() string {
 }
 
 // 生成获取路径参数的代码
-func (mine *ParamBean) MakeGetPathVariableSource(index int) string {
+func (mine *ParamBean) MakeGetPathVariableParameterSource(index int) string {
 	source := ""
 	var parseFunc string
 	if strings.HasSuffix(mine.VarType, "int") { //int类型的变量

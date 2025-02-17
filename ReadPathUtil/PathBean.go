@@ -40,21 +40,30 @@ type PathBean struct {
 // MakeHandleSource 生成Handle部分的代码
 func (mine PathBean) MakeHandleSource() string {
 	source := ""
-	source += "\thttp.HandleFunc(\"" + mine.Path + "\", func(writer http.ResponseWriter, request *http.Request) {\n"
-	if mine.HttpMethod != "REQUEST" { //需要指定请求方法的情况
-		source += "\t\tif request.Method != \"" + mine.HttpMethod + "\" {\n"
-		source += "\t\t\twriter.WriteHeader(http.StatusMethodNotAllowed) // 设置状态码\n"
-		source += "\t\t\twriter.Write([]byte(\"Method Not Allowed\"))\n"
-		source += "\t\t\treturn\n"
-		source += "\t\t}\n"
-	}
-	source += "\t\tvar body any = nil\n"
+	source += "\t\t\tvar body any = nil\n"
 	source += ReadInterceptorUtil.MappingBefore(mine.Path) //执行前拦截器
 	source += mine.getControllerParamSource()              // 获取Controller参数部分的代码
 	source += mine.getCallMethodSource()                   // 生成调用函数部分的代码
 	source += ReadInterceptorUtil.MappingAfter(mine.Path)  //执行前拦截器
 	source += mine.makeWriteToSource()
-	source += "\t})\n"
+	source += "\t\t\treturn\n"
+
+	if len(mine.getPathVariableList()) > 0 { //如果有路由参数
+		pathVariableSplitStr := strings.Join(mine.getPathVariableSplitArr(), "\", \"")
+		source = `
+		pathVariableSplitArr := []string{"` + pathVariableSplitStr + `"}
+		varPath := request.URL.Path[` + strconv.Itoa(len(mine.Path)) + `:]
+		if isPathVariable(varPath, pathVariableSplitArr){// 判断是否满足定义的路由参数规则
+			` + source + `
+		}
+`
+	}
+
+	if mine.HttpMethod != "REQUEST" { //需要指定请求方法的情况
+		source = "\t\t\tif request.Method == \"" + mine.HttpMethod + "\" {\n" +
+			source +
+			"\t\t}\n"
+	}
 	return source
 }
 
@@ -70,22 +79,22 @@ func (mine PathBean) GetNickImport() string {
 
 // 获取Controller参数部分的代码
 func (mine PathBean) getControllerParamSource() string {
-	pathVariableList := mine.getPathVariableList()
 	getFormParamtaSource := ""  //获取表单参数部分代码
 	getPathVariableSource := "" //获取路由参数部分代码
+	pathVariableList := mine.getPathVariableList()
 	for _, parameter := range mine.Parameters {
-		if slices.Contains(pathVariableList, parameter.Name) { //这是一个url路径参数
+		if slices.Contains(pathVariableList, parameter.Name) { //这是一个url路由参数
 			index := slices.Index(pathVariableList, parameter.Name)
-			getPathVariableSource += parameter.MakeGetPathVariableSource(index)
+			getPathVariableSource += parameter.MakeGetPathVariableParameterSource(index)
 		} else {
 			getFormParamtaSource += parameter.MakeGetParameterSource()
 		}
 	}
 	if len(getFormParamtaSource) > 0 { //生成URL参数和Body参数变量代码
-		getFormParamtaSource = "\t\trequestFormData := getRequestFormData(request) //获取表单数据\n" + getFormParamtaSource
+		getFormParamtaSource = "\t\t\trequestFormData := getRequestFormData(request) //获取表单数据\n" + getFormParamtaSource
 	}
-	if len(getPathVariableSource) > 0 { //如果有路径参数
-		getPathVariableSource = mine.getPathVariableListSource() + getPathVariableSource
+	if len(getPathVariableSource) > 0 { //如果这是一个路由参数
+		getPathVariableSource = makePathVariableParameterSource + getPathVariableSource
 	}
 	return getFormParamtaSource + getPathVariableSource
 }
@@ -116,9 +125,9 @@ func (mine PathBean) getCallMethodSource() string {
 	//source := "\t\tvar body any = nil\n"
 	source := ""
 	if len(mine.ReturnType) > 0 { //如果有返回值
-		source += "\t\tbody = " + callMethodSource
+		source += "\t\t\tbody = " + callMethodSource
 	} else {
-		source += "\t\t" + callMethodSource
+		source += "\t\t\t" + callMethodSource
 	}
 	return source + "\n"
 }
@@ -127,9 +136,9 @@ func (mine PathBean) getCallMethodSource() string {
 func (mine PathBean) makeWriteToSource() string {
 	templateSource := ReadTemplateUtil.ReadUseTemplatesByHtml(mine.Html)
 	if len(templateSource) > 0 { //这是一个html模板路由
-		return "\t\twriteToTemplate(writer, body, " + templateSource + ")\n"
+		return "\t\t\twriteToTemplate(writer, body, " + templateSource + ")\n"
 	} else {
-		return "\t\twriteToResponse(writer, body)\n"
+		return "\t\t\twriteToResponse(writer, body)\n"
 	}
 }
 
@@ -143,38 +152,20 @@ func (mine PathBean) getPathVariableList() []string {
 	return pathVarList
 }
 
-// 获取路由参数数组部分的代码
-func (mine PathBean) getPathVariableListSource() string {
+// 获取路由参数分割参数的字符串列表
+func (mine PathBean) getPathVariableSplitArr() []string {
 
 	// 定义正则表达式，匹配所有被 {} 包围的内容
 	re := regexp.MustCompile(`\{[^}]+\}`)
 
 	// 使用 ReplaceAllString 方法将所有匹配的内容替换为空格
 	replacePath := re.ReplaceAllString(mine.VariablePath, " ")
-	pathVariableSplits := strings.Split(replacePath, " ")
-	pathVariableSplitStr := strings.Join(pathVariableSplits, `", "`)
+	return strings.Split(replacePath, " ")
+}
 
-	hasPrefixSource := ""
-	hasSuffixSource := ""
-	if pathVariableSplits[0] != "" {
-		hasPrefixSource = `if !strings.HasPrefix(varPath, "` + pathVariableSplits[0] + `") { //如果不是以指定的字符串开头
-			writer.WriteHeader(http.StatusNotFound)
-			return
-		}`
-	}
-	if pathVariableSplits[len(pathVariableSplits)-1] != "" {
-		hasSuffixSource = `if !strings.HasSuffix(varPath, "` + pathVariableSplits[len(pathVariableSplits)-1] + `") {//如果不是以指定的字符串结尾
-			writer.WriteHeader(http.StatusNotFound)
-			return
-		}`
-	}
-
-	return `
+// 获取路由参数数组部分的代码
+const makePathVariableParameterSource = `
 		pathVariables := make([]string, 0)
-		varPath := request.URL.Path[` + strconv.Itoa(len(mine.Path)) + `:]
-		pathVariableSplitArr := []string{"` + pathVariableSplitStr + `"}
-		` + hasPrefixSource + `
-		` + hasSuffixSource + `
 		for i := 0; i < len(pathVariableSplitArr)-1; i++ {
 			varPath = varPath[len(pathVariableSplitArr[i]):]
 			if pathVariableSplitArr[i+1] == "" { //这已经是最后一个参数了
@@ -189,4 +180,3 @@ func (mine PathBean) getPathVariableListSource() string {
 				varPath = varPath[nextIndex:]
 			}
 		}` + "\n"
-}

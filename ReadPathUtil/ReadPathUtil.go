@@ -9,12 +9,27 @@ import (
 // 路由列表
 var PathList []PathBean
 
+// 路由对应的路由信息列表
+var PathMap map[string][]PathBean
+
 func Make() {
 	for _, fPath := range Application.GoFileList {
 
 		// 读取go文件里的路由配置
 		list := readControllerPath(fPath)
 		PathList = append(PathList[:], list[:]...)
+	}
+	PathMap = make(map[string][]PathBean)
+
+	// 生成路由对应的路由信息列表
+	for _, it := range PathList {
+		list := PathMap[it.Path]
+		if list != nil {
+			list = append(list, it)
+		} else {
+			list = []PathBean{it}
+		}
+		PathMap[it.Path] = list
 	}
 }
 

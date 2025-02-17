@@ -15,6 +15,21 @@ import (
 
 const VERSION = "1.0.0"
 
+// 是否能匹配当前路由参数
+func isPathVariable(path string, splitList []string) bool {
+	if !strings.HasPrefix(path, splitList[0]) { //判断前缀是否一致
+		return false
+	}
+	for _, it := range splitList { //挨个匹配路由
+		index := strings.Index(path, it)
+		if index == -1 {
+			return false
+		}
+		path = path[index+len(it):]
+	}
+	return path == ""
+}
+
 func main() {
 	start := time.Now()
 	if len(os.Args) == 1 {
