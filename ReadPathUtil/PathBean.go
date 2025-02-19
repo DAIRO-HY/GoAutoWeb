@@ -41,11 +41,12 @@ type PathBean struct {
 func (mine PathBean) MakeHandleSource() string {
 	source := ""
 	source += "\t\t\tvar body any = nil\n"
-	source += ReadInterceptorUtil.MappingBefore(mine.Path) //执行前拦截器
+	source += ReadInterceptorUtil.MappingBefore(mine.Path) // 执行前拦截器
 	source += mine.getControllerParamSource()              // 获取Controller参数部分的代码
+	source += mine.makeDeferSource()                       // 生成最终执行代码
 	source += mine.getCallMethodSource()                   // 生成调用函数部分的代码
-	source += ReadInterceptorUtil.MappingAfter(mine.Path)  //执行前拦截器
-	source += mine.makeWriteToSource()
+	//source += ReadInterceptorUtil.MappingAfter(mine.Path) // 执行后拦截器
+	//source += mine.makeWriteToSource()
 	source += "\t\t\treturn\n"
 
 	if len(mine.getPathVariableList()) > 0 { //如果有路由参数
@@ -132,13 +133,30 @@ func (mine PathBean) getCallMethodSource() string {
 	return source + "\n"
 }
 
-// 生成写入Respone部分的代码
+// 生成最终执行代码
+func (mine PathBean) makeDeferSource() string {
+
+	// 执行后拦截器
+	afterSource := ReadInterceptorUtil.MappingAfter(mine.Path)
+
+	// 生成写入Response部分的代码
+	writeSource := mine.makeWriteToSource()
+	return `
+			defer func() {
+				if panicErr := recover(); panicErr != nil { // 程序终止异常全局捕获
+					body = panicErr
+				}
+` + afterSource + writeSource + `			}()
+`
+}
+
+// 生成写入Response部分的代码
 func (mine PathBean) makeWriteToSource() string {
 	templateSource := ReadTemplateUtil.ReadUseTemplatesByHtml(mine.Html)
 	if len(templateSource) > 0 { //这是一个html模板路由
-		return "\t\t\twriteToTemplate(writer, body, " + templateSource + ")\n"
+		return "\t\t\t\twriteToTemplate(writer, body, " + templateSource + ")\n"
 	} else {
-		return "\t\t\twriteToResponse(writer, body)\n"
+		return "\t\t\t\twriteToResponse(writer, body)\n"
 	}
 }
 

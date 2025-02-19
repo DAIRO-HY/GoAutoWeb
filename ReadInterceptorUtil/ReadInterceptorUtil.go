@@ -46,7 +46,7 @@ func MappingBefore(path string) string {
 	return source
 }
 
-// 匹配执行前拦截器
+// 匹配执行后拦截器
 func MappingAfter(path string) string {
 	source := ""
 	for _, interceptor := range InterceptorList {
@@ -55,7 +55,7 @@ func MappingAfter(path string) string {
 		}
 		isInterceptor := mappingInterceptor(path, interceptor.Include, interceptor.Exclude)
 		if isInterceptor { //匹配到了拦截器
-			source += "\t\tbody = " + interceptor.GetNickImport() + "." + interceptor.FuncName + "(writer, request, body)\n"
+			source += "\t\t\t\tbody = " + interceptor.GetNickImport() + "." + interceptor.FuncName + "(writer, request, body)\n"
 		}
 	}
 	return source
