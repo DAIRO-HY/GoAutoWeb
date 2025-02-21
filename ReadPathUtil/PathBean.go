@@ -64,6 +64,10 @@ func (mine PathBean) MakeHandleSource() string {
 		source = "\t\t\tif request.Method == \"" + mine.HttpMethod + "\" {\n" +
 			source +
 			"\t\t}\n"
+	} else {
+		source = "\t\t\t{\n" +
+			source +
+			"\t\t}\n"
 	}
 	return source
 }
