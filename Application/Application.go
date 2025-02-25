@@ -1,64 +1,112 @@
 package Application
 
 import (
-	"GoAutoWeb/FileUtil"
 	"fmt"
+	"log"
 	"os"
-	"path/filepath"
+	"reflect"
+	"strconv"
 	"strings"
+	"unicode"
 )
 
-// 项目根目录
-var RootProject string
+// 程序启动参数
+var Args appArgs
 
-// go代码文件列表
-var GoFileList []string
+// 程序启动参数
+type appArgs struct {
 
-// html模板文件列表
-var HtmlFileList []string
+	// 源码路径
+	SourceDir string
 
-// 项目的模块名
-var ModuleName string
+	// 生成目标代码类型，{web,flutter-api}
+	TargetType string
 
-func Init(folder string) {
-	RootProject = strings.ReplaceAll(folder, "\\", "/")
-	readModuleName()
-	makeFileList()
+	// 目标代码目录
+	TargetDir string
 }
 
-// 读取项目的模块名
-func readModuleName() {
-	gomod := FileUtil.ReadText(RootProject + "/go.mod")
-	gomod = strings.TrimSpace(gomod)
-	gomod = strings.ReplaceAll(gomod, "\r\n", "\n")
-	gomod = strings.ReplaceAll(gomod, "\n", " ")
-	ModuleName = strings.Split(gomod, " ")[1]
+func Init() {
+	parseArgs()
 }
 
-// 获取go文件列表
-func makeFileList() {
-
-	// 遍历文件夹
-	err := filepath.WalkDir(RootProject, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
+// 解析参数
+func parseArgs() {
+	fmt.Println("------------------------------------------------------------------------")
+	fmt.Println(strings.Join(os.Args, " "))
+	fmt.Println("------------------------------------------------------------------------")
+	Args = appArgs{
+		TargetType: "web",
+	}
+	if len(os.Args) == 1 { //没有设置任何参数时
+		source := ""
+		source = os.Args[0]
+		source = strings.ReplaceAll(source, "\\", "/")
+		source = source[:strings.LastIndex(source, "/")]
+		Args.SourceDir = source
+	}
+	argsElem := reflect.ValueOf(&Args).Elem()
+	for i := 0; i < len(os.Args); i++ {
+		key := os.Args[i]
+		if !strings.HasPrefix(key, "--") {
+			continue
 		}
-		if d.IsDir() {
-			if strings.HasSuffix(path, ".idea") || strings.HasSuffix(path, ".git") {
-				return filepath.SkipDir
+
+		filedName := ""
+		for _, it := range strings.Split(key[2:], "-") {
+			if len(it) == 0 {
+				continue
 			}
-			return nil
-		}
-		if strings.HasSuffix(path, ".go") {
-			GoFileList = append(GoFileList, path)
-		}
-		if strings.HasSuffix(path, ".html") {
-			HtmlFileList = append(HtmlFileList, path)
-		}
-		return nil
-	})
+			// 将字符串转换为 rune 切片以便处理 Unicode 字符
+			r := []rune(it)
 
-	if err != nil {
-		fmt.Printf("Error walking the path %q: %v\n", RootProject, err)
+			// 将首字母大写
+			r[0] = unicode.ToUpper(r[0])
+			filedName += string(r)
+		}
+		field := argsElem.FieldByName(filedName)
+		if !field.IsValid() { //如果该字段不存在
+			continue
+		}
+		if i+1 > len(os.Args)-1 { //已经没有下一个元素
+			break
+		}
+
+		//参数值
+		value := os.Args[i+1]
+		switch field.Kind() {
+
+		//整数类型转换
+		case reflect.Int,
+			reflect.Int8,
+			reflect.Int16,
+			reflect.Int32,
+			reflect.Int64,
+			reflect.Uint,
+			reflect.Uint8,
+			reflect.Uint16,
+			reflect.Uint32,
+			reflect.Uint64:
+			v, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				log.Panicf("参数%s=%s发生了转换错误:%q", key, value, err)
+			}
+			field.SetInt(v)
+		case reflect.Float32, reflect.Float64:
+			v, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				log.Panicf("参数%s=%s发生了转换错误:%q", key, value, err)
+			}
+			field.SetFloat(v)
+		case reflect.Bool:
+			v, err := strconv.ParseBool(value)
+			if err != nil {
+				log.Panicf("参数%s=%s发生了转换错误:%q", key, value, err)
+			}
+			field.SetBool(v)
+		case reflect.String:
+			field.SetString(value)
+		}
+		i++
 	}
 }

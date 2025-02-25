@@ -3,6 +3,9 @@ package ReadFormUtil
 // 结构体属性Bean
 type FormPropertyBean struct {
 
+	//注释
+	Comment string
+
 	//参数类型
 	VarType string
 

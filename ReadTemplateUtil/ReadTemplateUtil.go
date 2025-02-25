@@ -1,8 +1,8 @@
 package ReadTemplateUtil
 
 import (
-	"GoAutoWeb/Application"
 	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/Global"
 	"strings"
 )
 
@@ -10,10 +10,10 @@ import (
 var TemplateNameToPath = map[string]string{}
 
 func Make() {
-	for _, path := range Application.HtmlFileList {
+	for _, path := range Global.HtmlFileList {
 		for _, it := range readName(path) {
 			absPath := strings.ReplaceAll(path, "\\", "/")
-			absPath = absPath[len(Application.RootProject)+1:]
+			absPath = absPath[len(Global.RootProject)+1:]
 			TemplateNameToPath[it] = absPath
 		}
 	}
@@ -50,7 +50,7 @@ func ReadUseTemplatesByHtml(html string) string {
 	}
 
 	//获取页面html绝对路径
-	path := Application.RootProject + "/resources/templates/" + html
+	path := Global.RootProject + "/resources/templates/" + html
 	content := FileUtil.ReadText(path)
 
 	//先统一换行符

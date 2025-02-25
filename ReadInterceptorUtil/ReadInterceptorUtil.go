@@ -1,8 +1,8 @@
 package ReadInterceptorUtil
 
 import (
-	"GoAutoWeb/Application"
 	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/Global"
 	"sort"
 	"strconv"
 	"strings"
@@ -12,7 +12,7 @@ import (
 var InterceptorList []InterceptorBean
 
 func Make() {
-	for _, fPath := range Application.GoFileList {
+	for _, fPath := range Global.GoFileList {
 
 		// 读取go文件里的拦截器
 		list := readInterceptor(fPath)
@@ -118,7 +118,7 @@ func mappingInterceptor(path string, includes []string, excludes []string) bool 
 func readInterceptor(path string) []InterceptorBean {
 
 	//包所在路径
-	packagePath := path[len(Application.RootProject):]
+	packagePath := path[len(Global.RootProject):]
 	packagePath = strings.ReplaceAll(packagePath, "\\", "/")
 	packagePath = packagePath[:strings.LastIndex(packagePath, "/")]
 

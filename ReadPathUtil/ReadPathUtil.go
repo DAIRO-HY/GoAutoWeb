@@ -1,8 +1,8 @@
 package ReadPathUtil
 
 import (
-	"GoAutoWeb/Application"
 	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/Global"
 	"strings"
 )
 
@@ -13,7 +13,7 @@ var PathList []PathBean
 var PathMap map[string][]PathBean
 
 func Make() {
-	for _, fPath := range Application.GoFileList {
+	for _, fPath := range Global.GoFileList {
 
 		// 读取go文件里的路由配置
 		list := readControllerPath(fPath)
@@ -34,15 +34,15 @@ func Make() {
 }
 
 // 读取go文件里的路由配置
-func readControllerPath(path string) []PathBean {
+func readControllerPath(filePath string) []PathBean {
 
 	//包所在路径
-	packagePath := path[len(Application.RootProject):]
+	packagePath := filePath[len(Global.RootProject):]
 	packagePath = strings.ReplaceAll(packagePath, "\\", "/")
 	packagePath = packagePath[:strings.LastIndex(packagePath, "/")]
 
 	//读取代码
-	goCode := FileUtil.ReadText(path)
+	goCode := FileUtil.ReadText(filePath)
 
 	//先统一换行符
 	goCode = strings.ReplaceAll(goCode, "\r", "\r\n")
@@ -75,18 +75,23 @@ func readControllerPath(path string) []PathBean {
 			if pathBean.HttpMethod != "" { //路由标记的才是对象
 				pathBean.PackagePath = packagePath
 
-				//判断path中有没有参数路由
-				path = group + pathBean.Path
-				pathVariableStartSplitCharIndex := strings.Index(path, "{")
+				//完整的路由
+				fillPath := group + pathBean.Path
+				pathVariableStartSplitCharIndex := strings.Index(fillPath, "{")
 				if pathVariableStartSplitCharIndex != -1 { //有路由参数
 
 					//获取路由参数之前的最后一个路径分隔符位置
-					lastPathIndex := strings.LastIndex(path[:pathVariableStartSplitCharIndex], "/") + 1
-					pathBean.Path = path[:lastPathIndex]
-					pathBean.VariablePath = path[lastPathIndex:]
+					lastPathIndex := strings.LastIndex(fillPath[:pathVariableStartSplitCharIndex], "/") + 1
+					pathBean.Path = fillPath[:lastPathIndex]
+					pathBean.VariablePath = fillPath[lastPathIndex:]
 				} else {
-					pathBean.Path = path
+					pathBean.Path = fillPath
 				}
+
+				fileName := filePath
+				fileName = strings.ReplaceAll(fileName, "\\", "/")
+				fileName = fileName[strings.LastIndex(fileName, "/")+1:]
+				pathBean.FileName = fileName
 				pathList = append(pathList, *pathBean)
 			}
 			pathBean = &PathBean{}

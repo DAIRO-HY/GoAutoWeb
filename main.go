@@ -2,13 +2,14 @@ package main
 
 import (
 	"GoAutoWeb/Application"
+	"GoAutoWeb/Global"
+	"GoAutoWeb/MakeFlutterApi"
 	"GoAutoWeb/MakeSourceUtil"
 	"GoAutoWeb/ReadFormUtil"
 	"GoAutoWeb/ReadInterceptorUtil"
 	"GoAutoWeb/ReadPathUtil"
 	"GoAutoWeb/ReadTemplateUtil"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 )
@@ -32,15 +33,11 @@ func isPathVariable(path string, splitList []string) bool {
 
 func main() {
 	start := time.Now()
-	if len(os.Args) == 1 {
-		currentFolder := os.Args[0]
-		currentFolder = strings.ReplaceAll(currentFolder, "\\", "/")
-		currentFolder = currentFolder[:strings.LastIndex(currentFolder, "/")]
-		Application.Init(currentFolder)
-	} else {
-		Application.Init(os.Args[1])
-	}
-	fmt.Println(Application.RootProject)
+
+	//初始化程序参数
+	Application.Init()
+	Global.Init()
+	fmt.Println(Global.RootProject)
 
 	//初始化读取路由列表
 	ReadPathUtil.Make()
@@ -53,8 +50,12 @@ func main() {
 
 	//生成模板数据
 	ReadTemplateUtil.Make()
+	if Application.Args.TargetType == "web" { //生成web的controller代码
+		MakeSourceUtil.Make()
+	} else if Application.Args.TargetType == "flutter-api" {
+		MakeFlutterApi.Make()
+	} else {
 
-	//生成代码
-	MakeSourceUtil.Make()
+	}
 	fmt.Printf("本次耗时：%s", time.Since(start))
 }

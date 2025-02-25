@@ -12,6 +12,9 @@ import (
 // Controller路由信息
 type PathBean struct {
 
+	//文件名
+	FileName string
+
 	//包所在路径
 	PackagePath string
 

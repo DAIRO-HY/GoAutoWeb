@@ -1,8 +1,8 @@
 package ReadFormUtil
 
 import (
-	"GoAutoWeb/Application"
 	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/Global"
 	"regexp"
 	"strings"
 )
@@ -14,7 +14,7 @@ var FormList []FormBean
 var FormMap = map[string]FormBean{}
 
 func Make() {
-	for _, fPath := range Application.GoFileList {
+	for _, fPath := range Global.GoFileList {
 		if !strings.HasSuffix(fPath, "Form.go") { //过滤文件后缀
 			continue
 		}
@@ -30,7 +30,7 @@ func Make() {
 func readControllerPath(path string) FormBean {
 
 	//包所在路径
-	packagePath := path[len(Application.RootProject):]
+	packagePath := path[len(Global.RootProject):]
 	packagePath = strings.ReplaceAll(packagePath, "\\", "/")
 	packagePath = packagePath[:strings.LastIndex(packagePath, "/")]
 
@@ -58,6 +58,8 @@ func readControllerPath(path string) FormBean {
 	//表单验证
 	valids := make([]FormValidateBean, 0)
 
+	//注释内容
+	comment := ""
 	index := 0
 	for index < len(lines) {
 		line := lines[index]
@@ -74,15 +76,19 @@ func readControllerPath(path string) FormBean {
 		} else if line[0] >= 65 && line[0] <= 90 { //首字母是大写,判定这是一个属性
 			property := readProperty(line)
 			property.valids = valids
+			property.Comment = comment
 
 			//清空当前属性的验证规则
 			valids = make([]FormValidateBean, 0)
 			properties = append(properties, property)
+			comment = ""
 		} else if strings.HasPrefix(line, "func") { //这是一个函数
 			function := readFunction(line)
 			if function != nil {
 				functions = append(functions, *function)
 			}
+		} else if strings.HasPrefix(line, "//") || strings.HasPrefix(line, "/*") {
+			comment += line + "\n"
 		}
 		index++
 	}

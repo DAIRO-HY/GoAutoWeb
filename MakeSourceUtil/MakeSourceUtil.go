@@ -1,8 +1,8 @@
 package MakeSourceUtil
 
 import (
-	"GoAutoWeb/Application"
 	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/Global"
 	"GoAutoWeb/ReadInterceptorUtil"
 	"GoAutoWeb/ReadPathUtil"
 	_ "embed"
@@ -18,8 +18,8 @@ func Make() {
 	autoWebCode := autoWebSample
 	autoWebCode = strings.ReplaceAll(autoWebCode, "//{BODY}", makeHandleBody())
 	autoWebCode = strings.ReplaceAll(autoWebCode, "//{IMPORT}", makeImportSource())
-	if FileUtil.ReadText(Application.RootProject+"/AutoWeb.go") != autoWebCode { //避免重复写入
-		FileUtil.WriteText(Application.RootProject+"/AutoWeb.go", autoWebCode)
+	if FileUtil.ReadText(Global.RootProject+"/AutoWeb.go") != autoWebCode { //避免重复写入
+		FileUtil.WriteText(Global.RootProject+"/AutoWeb.go", autoWebCode)
 	}
 }
 
@@ -47,7 +47,7 @@ func makeHandleBody() string {
 func makeImportSource() string {
 
 	//读取项目的模块名
-	moduleName := Application.ModuleName
+	moduleName := Global.ModuleName
 	importSourceMap := make(map[string]bool)
 
 	//遍历路由中所有用到类的Import
