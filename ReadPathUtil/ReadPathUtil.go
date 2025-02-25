@@ -54,7 +54,8 @@ func readControllerPath(filePath string) []PathBean {
 
 	var pathList []PathBean
 	pathBean := &PathBean{}
-	group := "" //分组名
+	group := ""   //分组名
+	comment := "" //注释
 	for index, line := range lines {
 		if group == "" {
 			group = readGroup(line)
@@ -62,7 +63,8 @@ func readControllerPath(filePath string) []PathBean {
 		readPath(line, pathBean)                          // 解析路由
 		readHtml(line, pathBean)                          //解析html页面
 		readFunction(index, lines, packagePath, pathBean) //读取调用的函数
-		if pathBean.FuncName != "" {                      //已经读取到了调用的函数
+		comment += readComment(line)
+		if pathBean.FuncName != "" { //已经读取到了调用的函数
 			if pathBean.HttpMethod == "" && pathBean.Html != "" { //如果有配置html页面，但没有配置HTTP请求方式，则将html路径作为路由
 				pathBean.HttpMethod = "GET"
 				if strings.HasPrefix(pathBean.Html, ".") {
@@ -88,13 +90,19 @@ func readControllerPath(filePath string) []PathBean {
 					pathBean.Path = fillPath
 				}
 
+				if comment != "" {
+					comment = comment[:len(comment)-1]
+				}
+
 				fileName := filePath
 				fileName = strings.ReplaceAll(fileName, "\\", "/")
 				fileName = fileName[strings.LastIndex(fileName, "/")+1:]
 				pathBean.FileName = fileName
+				pathBean.Comment = comment
 				pathList = append(pathList, *pathBean)
 			}
 			pathBean = &PathBean{}
+			comment = ""
 		}
 	}
 	return pathList
@@ -196,6 +204,14 @@ func readParameter(goPackagePath string, line string) []ParamBean {
 func readFuncName(line string) string {
 	funcName := line[strings.Index(line, "func")+5 : strings.Index(line, "(")]
 	return funcName
+}
+
+// 读取注解
+func readComment(line string) string {
+	if strings.HasPrefix(line, "//") {
+		return line[2:] + "\n"
+	}
+	return ""
 }
 
 // 读取返回值

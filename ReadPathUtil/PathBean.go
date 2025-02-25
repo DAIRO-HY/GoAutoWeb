@@ -38,6 +38,9 @@ type PathBean struct {
 
 	//页面html相对路径
 	Html string
+
+	//注释
+	Comment string
 }
 
 // MakeHandleSource 生成Handle部分的代码

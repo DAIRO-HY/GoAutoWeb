@@ -157,5 +157,5 @@ func makeFromSource(form ReadFormUtil.FormBean) string {
 
 // 保存文件
 func save(source string, fileName string) {
-	os.WriteFile(Application.Args.TargetDir+"/lib/api/model/"+fileName+".new.dart", []byte(source), 0644)
+	os.WriteFile(Application.Args.TargetDir+"/lib/api/model/"+fileName+".dart", []byte(source), 0644)
 }

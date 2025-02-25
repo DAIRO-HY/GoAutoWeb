@@ -24,6 +24,9 @@ type appArgs struct {
 
 	// 目标代码目录
 	TargetDir string
+
+	// 要生成Api文件的后缀
+	ApiSuffix string
 }
 
 func Init() {
