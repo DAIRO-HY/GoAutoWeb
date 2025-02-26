@@ -191,6 +191,11 @@ func (mine PathBean) getPathVariableSplitArr() []string {
 	return strings.Split(replacePath, " ")
 }
 
+// 获取小写的函数名称
+func (mine PathBean) LowerFuncName() string {
+	return strings.ToLower(mine.FuncName[:1]) + mine.FuncName[1:]
+}
+
 // 获取路由参数数组部分的代码
 const makePathVariableParameterSource = `
 		pathVariables := make([]string, 0)

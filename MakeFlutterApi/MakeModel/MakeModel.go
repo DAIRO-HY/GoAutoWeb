@@ -58,7 +58,6 @@ func fixFormMember(form ReadFormUtil.FormBean) {
 
 		// go数据类型转dart数据类型
 		it.VarType = goTypeToDartType(it.VarType)
-		it.Name = strings.ToLower(it.Name[:1]) + it.Name[1:]
 	}
 }
 

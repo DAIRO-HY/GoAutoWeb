@@ -1,5 +1,7 @@
 package ReadFormUtil
 
+import "strings"
+
 // 结构体属性Bean
 type FormPropertyBean struct {
 
@@ -14,4 +16,9 @@ type FormPropertyBean struct {
 
 	/** 表单验证列表 **/
 	valids []FormValidateBean
+}
+
+// 获取小写的名称
+func (mine FormPropertyBean) LowerName() string {
+	return strings.ToLower(mine.Name[:1]) + mine.Name[1:]
 }

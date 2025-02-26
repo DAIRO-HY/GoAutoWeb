@@ -2,6 +2,7 @@ package MakeApiRequest
 
 import (
 	"GoAutoWeb/Application"
+	"GoAutoWeb/ReadFormUtil"
 	"GoAutoWeb/ReadPathUtil"
 	"encoding/json"
 	"os"
@@ -43,7 +44,7 @@ func Make() {
 		returnSource := makeReturnTypeSource(it)
 		comment := makeComment(it)
 		sourceBody += comment
-		sourceBody += "\n  static " + returnSource + " " + it.FuncName + "(" + callParamSource + "){\n" + callHttpSource + "\n  }\n"
+		sourceBody += "\n  static " + returnSource + " " + it.LowerFuncName() + "(" + callParamSource + "){\n" + callHttpSource + "\n  }\n"
 	}
 }
 
@@ -68,7 +69,6 @@ func fixPathList() []ReadPathUtil.PathBean {
 			newParameters = append(newParameters, it)
 		}
 		pb.Parameters = newParameters
-		pb.FuncName = strings.ToLower(pb.FuncName[:1]) + pb.FuncName[1:]
 	}
 	return copyList
 }
@@ -77,8 +77,19 @@ func fixPathList() []ReadPathUtil.PathBean {
 func makeParamSource(pb ReadPathUtil.PathBean) string {
 	source := ""
 	for _, it := range pb.Parameters {
-		paramType := goTypeToDartType(it.VarType)
-		source += "required " + paramType + " " + it.Name + ","
+		if strings.HasSuffix(it.VarType, "Form") {
+			form, isExists := ReadFormUtil.FormMap[it.PackagePath+"/"+it.VarType]
+			if !isExists {
+				continue
+			}
+			for _, formMember := range form.Properties {
+				paramType := goTypeToDartType(formMember.VarType)
+				source += "required " + paramType + " " + formMember.LowerName() + ","
+			}
+		} else {
+			paramType := goTypeToDartType(it.VarType)
+			source += "required " + paramType + " " + it.Name + ","
+		}
 	}
 	if source != "" {
 		source = "{" + source[:len(source)-1] + "}"
@@ -90,7 +101,17 @@ func makeParamSource(pb ReadPathUtil.PathBean) string {
 func makeCallHttpSource(pb ReadPathUtil.PathBean) string {
 	source := ""
 	for _, it := range pb.Parameters {
-		source += ".add(\"" + it.Name + "\"," + it.Name + ")"
+		if strings.HasSuffix(it.VarType, "Form") {
+			form, isExists := ReadFormUtil.FormMap[it.PackagePath+"/"+it.VarType]
+			if !isExists {
+				continue
+			}
+			for _, formMember := range form.Properties {
+				source += ".add(\"" + formMember.LowerName() + "\"," + formMember.LowerName() + ")"
+			}
+		} else {
+			source += ".add(\"" + it.Name + "\"," + it.Name + ")"
+		}
 	}
 	constName := urlToConst(pb)
 	returnSource := makeReturnTypeSource(pb)
@@ -117,7 +138,7 @@ func makeComment(pb ReadPathUtil.PathBean) string {
 		return ""
 	}
 	cms := strings.Split(comment, "\n")
-	return "//" + strings.Join(cms, "\n//")
+	return "  //" + strings.Join(cms, "\n  //")
 }
 
 // go数据类型转dart数据类型
