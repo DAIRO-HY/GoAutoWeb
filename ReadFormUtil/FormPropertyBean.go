@@ -22,3 +22,8 @@ type FormPropertyBean struct {
 func (mine FormPropertyBean) LowerName() string {
 	return strings.ToLower(mine.Name[:1]) + mine.Name[1:]
 }
+
+// 获取切片类型
+func (mine FormPropertyBean) ListType() string {
+	return mine.VarType[2:]
+}

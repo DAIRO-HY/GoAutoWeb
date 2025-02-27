@@ -28,7 +28,6 @@ func makeModelByForm(form ReadFormUtil.FormBean) {
 
 	//修改类名
 	form.Name = form.Name[0:len(form.Name)-4] + "Model"
-	fixFormMember(form) // 修复数据类型
 	body := makeVarBodySource(form) + makeConstructorSource(form) + makeToJsonSource(form) + makeFromSource(form)
 
 	importStr := ""
@@ -51,16 +50,6 @@ class ` + form.Name + ` extends JsonSerialize {
 	importList = make([]string, 0)
 }
 
-// 修复表单成员变量
-func fixFormMember(form ReadFormUtil.FormBean) {
-	for index := range form.Properties {
-		it := &form.Properties[index]
-
-		// go数据类型转dart数据类型
-		it.VarType = goTypeToDartType(it.VarType)
-	}
-}
-
 // go数据类型转dart数据类型
 func goTypeToDartType(varType string) string {
 	dartType := ""
@@ -79,6 +68,9 @@ func goTypeToDartType(varType string) string {
 				listFormName = goTypeToDartType(listFormName)
 			}
 			dartType = "List<" + listFormName + ">"
+		} else if strings.HasSuffix(varType, "Form") {
+			dartType = varType[:len(varType)-4] + "Model"
+			importList = append(importList, dartType)
 		} else {
 			dartType = varType
 		}
@@ -90,7 +82,7 @@ func goTypeToDartType(varType string) string {
 func makeVarBodySource(form ReadFormUtil.FormBean) string {
 	source := ""
 	for _, it := range form.Properties {
-		source += "\n  " + it.Comment + "  " + it.VarType + " " + it.Name + ";\n"
+		source += "\n  " + it.Comment + "  " + goTypeToDartType(it.VarType) + " " + it.LowerName() + ";\n"
 	}
 	return source + "\n"
 }
@@ -99,7 +91,7 @@ func makeVarBodySource(form ReadFormUtil.FormBean) string {
 func makeConstructorSource(form ReadFormUtil.FormBean) string {
 	source := ""
 	for _, it := range form.Properties {
-		source += "required this." + it.Name + ", "
+		source += "required this." + it.LowerName() + ", "
 	}
 	source = source[:len(source)-2]
 	return "  " + form.Name + "({" + source + "});\n"
@@ -109,7 +101,7 @@ func makeConstructorSource(form ReadFormUtil.FormBean) string {
 func makeToJsonSource(form ReadFormUtil.FormBean) string {
 	source := ""
 	for _, it := range form.Properties {
-		source += "        \"" + it.Name + "\": this." + it.Name + ",\n"
+		source += "        \"" + it.LowerName() + "\": this." + it.LowerName() + ",\n"
 	}
 	source = source[0 : len(source)-1]
 	return `
@@ -125,7 +117,15 @@ func makeToJsonSource(form ReadFormUtil.FormBean) string {
 func makeFromSource(form ReadFormUtil.FormBean) string {
 	source := ""
 	for _, it := range form.Properties {
-		source += "" + it.Name + ": map[\"" + it.Name + "\"], "
+		if strings.HasPrefix(it.VarType, "[]") { //如果这是一个List数据类型
+			if strings.HasSuffix(it.ListType(), "Form") {
+				source += "        " + it.LowerName() + ": " + goTypeToDartType(it.ListType()) + ".fromMapList(map[\"" + it.LowerName() + "\"]),\n"
+			} else {
+				//TODO：待实现
+			}
+		} else {
+			source += "        " + it.LowerName() + ": map[\"" + it.LowerName() + "\"],\n"
+		}
 	}
 	source = source[:len(source)-2]
 	source = `
@@ -137,7 +137,8 @@ func makeFromSource(form ReadFormUtil.FormBean) string {
 
   /// 将Map对象转{Model}对象
   static {Model} fromMap(Map<String, dynamic> map) {
-    return {Model}(` + source + `);
+    return {Model}(
+` + source + `);
   }
 
   /// 将Json字符串转{Model}对象列表

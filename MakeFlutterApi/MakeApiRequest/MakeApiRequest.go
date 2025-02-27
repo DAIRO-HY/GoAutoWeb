@@ -115,7 +115,8 @@ func makeCallHttpSource(pb ReadPathUtil.PathBean) string {
 	}
 	constName := urlToConst(pb)
 	returnSource := makeReturnTypeSource(pb)
-	source = "    return " + returnSource + "(Api." + constName + ")" + source + ";"
+	toModelSource := makeToModelSource(pb) //转换Model对象的代码
+	source = "    return " + returnSource + "(Api." + constName + toModelSource + ")" + source + ";"
 	return source
 }
 
@@ -126,8 +127,28 @@ func makeReturnTypeSource(pb ReadPathUtil.PathBean) string {
 		importList["import '../util/http/VoidApiHttp.dart';"] = struct{}{}
 		return "VoidApiHttp"
 	} else {
-		importList["import '../util/http/NotNullApiHttp.dart';"] = struct{}{}
-		return "NotNullApiHttp<" + returnType + ">"
+		importList["import '../util/http/ReturnApiHttp.dart';"] = struct{}{}
+		return "ReturnApiHttp<" + returnType + ">"
+	}
+}
+
+// 生成转换成model对象的代码
+func makeToModelSource(pb ReadPathUtil.PathBean) string {
+	returnType := goTypeToDartType(pb.ReturnType)
+	if returnType == "" {
+		return ""
+	}
+	if strings.HasSuffix(returnType, "Model") {
+		return ", " + returnType + ".fromJson"
+	} else if strings.HasPrefix(returnType, "List<") {
+		tType := returnType[strings.Index(returnType, "<")+1 : strings.Index(returnType, ">")]
+		if strings.HasSuffix(tType, "Model") {
+			return ", " + tType + ".fromJsonList"
+		} else {
+			return ""
+		}
+	} else {
+		return ""
 	}
 }
 

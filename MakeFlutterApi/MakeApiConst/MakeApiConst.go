@@ -15,7 +15,10 @@ func Make() {
 			continue
 		}
 		url := it.Path + it.VariablePath
-		source += "  static const " + urlToConst(it) + " = \"" + url + "\";\n"
+		for _, comment := range strings.Split(it.Comment, "\n") {
+			source += "  //" + comment + "\n"
+		}
+		source += "  static const " + urlToConst(it) + " = \"" + url + "\";\n\n"
 	}
 	source = "class Api{\n" + source + "}"
 	save(source)
