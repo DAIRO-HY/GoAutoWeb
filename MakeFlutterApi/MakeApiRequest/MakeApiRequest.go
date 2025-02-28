@@ -159,7 +159,7 @@ func makeComment(pb ReadPathUtil.PathBean) string {
 		return ""
 	}
 	cms := strings.Split(comment, "\n")
-	return "  //" + strings.Join(cms, "\n  //")
+	return "\n  //" + strings.Join(cms, "\n  //")
 }
 
 // go数据类型转dart数据类型

@@ -9,7 +9,7 @@ import (
 )
 
 // 导入的Model列表
-var importList []string
+var importMap = make(map[string]struct{})
 
 // 生成Model类文件
 func Make() {
@@ -31,8 +31,8 @@ func makeModelByForm(form ReadFormUtil.FormBean) {
 	body := makeVarBodySource(form) + makeConstructorSource(form) + makeToJsonSource(form) + makeFromSource(form)
 
 	importStr := ""
-	for _, it := range importList {
-		importStr += "import '" + it + ".dart';\n"
+	for imt := range importMap {
+		importStr += "import '" + imt + ".dart';\n"
 	}
 	if len(importStr) > 0 {
 		importStr = importStr[:len(importStr)-1]
@@ -47,7 +47,7 @@ import '../../util/JsonSerialize.dart';
 class ` + form.Name + ` extends JsonSerialize {
 ` + body + "}\n"
 	save(source, form.Name)
-	importList = make([]string, 0)
+	importMap = make(map[string]struct{})
 }
 
 // go数据类型转dart数据类型
@@ -63,14 +63,14 @@ func goTypeToDartType(varType string) string {
 			listFormName := varType[2:]
 			if strings.HasSuffix(listFormName, "Form") { //如果是以Form结尾的类名
 				listFormName = listFormName[:len(listFormName)-4] + "Model"
-				importList = append(importList, listFormName)
+				importMap[listFormName] = struct{}{}
 			} else {
 				listFormName = goTypeToDartType(listFormName)
 			}
 			dartType = "List<" + listFormName + ">"
 		} else if strings.HasSuffix(varType, "Form") {
 			dartType = varType[:len(varType)-4] + "Model"
-			importList = append(importList, dartType)
+			importMap[dartType] = struct{}{}
 		} else {
 			dartType = varType
 		}
@@ -91,10 +91,10 @@ func makeVarBodySource(form ReadFormUtil.FormBean) string {
 func makeConstructorSource(form ReadFormUtil.FormBean) string {
 	source := ""
 	for _, it := range form.Properties {
-		source += "required this." + it.LowerName() + ", "
+		source += "      required this." + it.LowerName() + ",\n"
 	}
 	source = source[:len(source)-2]
-	return "  " + form.Name + "({" + source + "});\n"
+	return "  " + form.Name + "(\n      {" + source + "});\n"
 }
 
 // 生成转Json部分的代码
@@ -118,10 +118,12 @@ func makeFromSource(form ReadFormUtil.FormBean) string {
 	source := ""
 	for _, it := range form.Properties {
 		if strings.HasPrefix(it.VarType, "[]") { //如果这是一个List数据类型
-			if strings.HasSuffix(it.ListType(), "Form") {
-				source += "        " + it.LowerName() + ": " + goTypeToDartType(it.ListType()) + ".fromMapList(map[\"" + it.LowerName() + "\"]),\n"
+			goType := goTypeToDartType(it.ListType())
+			if strings.HasSuffix(goType, "Model") {
+				source += "        " + it.LowerName() + ": " + goType + ".fromMapList(map[\"" + it.LowerName() + "\"]),\n"
+			} else if goType == "String" || goType == "int" {
+				source += "        " + it.LowerName() + ": (map[\"" + it.LowerName() + "\"] as List).map((it) => it as " + goType + ").toList(),\n"
 			} else {
-				//TODO：待实现
 			}
 		} else {
 			source += "        " + it.LowerName() + ": map[\"" + it.LowerName() + "\"],\n"

@@ -209,7 +209,15 @@ func readFuncName(line string) string {
 // 读取注解
 func readComment(line string) string {
 	if strings.HasPrefix(line, "//") {
-		return line[2:] + "\n"
+		comment := line[2:]
+		comment = strings.TrimSpace(comment)
+		if comment == "" {
+			return ""
+		}
+		if strings.HasPrefix(comment, "@") {
+			return ""
+		}
+		return comment + "\n"
 	}
 	return ""
 }

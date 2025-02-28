@@ -15,13 +15,21 @@ func Make() {
 			continue
 		}
 		url := it.Path + it.VariablePath
-		for _, comment := range strings.Split(it.Comment, "\n") {
-			source += "  //" + comment + "\n"
-		}
-		source += "  static const " + urlToConst(it) + " = \"" + url + "\";\n\n"
+		source += makeComment(it) + "\n"
+		source += "  static const " + urlToConst(it) + " = \"" + url + "\";\n"
 	}
 	source = "class Api{\n" + source + "}"
 	save(source)
+}
+
+// 生成注释部分的代码
+func makeComment(pb ReadPathUtil.PathBean) string {
+	comment := pb.Comment
+	if comment == "" {
+		return ""
+	}
+	cms := strings.Split(comment, "\n")
+	return "\n  //" + strings.Join(cms, "\n  //")
 }
 
 // 将路由转成常量名
