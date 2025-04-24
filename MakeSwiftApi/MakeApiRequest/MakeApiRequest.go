@@ -51,7 +51,7 @@ func Make() {
 func makeFuncName(name string) string {
 	switch name {
 	case "init":
-		return "`init`"
+		return "_init"
 	default:
 		return name
 	}
