@@ -5,6 +5,7 @@ import (
 	"GoAutoWeb/Global"
 	"GoAutoWeb/MakeFlutterApi"
 	"GoAutoWeb/MakeSourceUtil"
+	"GoAutoWeb/MakeSwiftApi"
 	"GoAutoWeb/ReadFormUtil"
 	"GoAutoWeb/ReadInterceptorUtil"
 	"GoAutoWeb/ReadPathUtil"
@@ -54,6 +55,8 @@ func main() {
 		MakeSourceUtil.Make()
 	} else if Application.Args.TargetType == "flutter-api" {
 		MakeFlutterApi.Make()
+	} else if Application.Args.TargetType == "swift-api" {
+		MakeSwiftApi.Make()
 	} else {
 
 	}

@@ -29,9 +29,8 @@ func Make() {
 			}
 
 			source := ""
-			source += "import 'API.dart';\n"
 			source += importStr
-			source += "\nclass " + tempClassName + " {\n" + sourceBody + "}"
+			source += "\nstruct " + tempClassName + " {\n" + sourceBody + "}"
 			save(tempClassName, source)
 			sourceBody = ""
 			importList = map[string]struct{}{}
@@ -40,11 +39,21 @@ func Make() {
 
 		//参数调用部分代码
 		callParamSource := makeParamSource(it)
-		callHttpSource := makeCallHttpSource(it)
-		returnSource := makeReturnTypeSource(it)
+		callApiHttp := makeCallHttpSource(it)
+		returnType := makeReturnTypeSource(it)
 		comment := makeComment(it)
 		sourceBody += comment
-		sourceBody += "\n  static " + returnSource + " " + it.LowerFuncName() + "(" + callParamSource + "){\n" + callHttpSource + "\n  }\n"
+		sourceBody += "\n  static func " + makeFuncName(it.LowerFuncName()) + "(" + callParamSource + ") -> " + returnType + "{\n" + callApiHttp + "\n  }\n"
+	}
+}
+
+// 生成函数名
+func makeFuncName(name string) string {
+	switch name {
+	case "init":
+		return "`init`"
+	default:
+		return name
 	}
 }
 
@@ -83,23 +92,23 @@ func makeParamSource(pb ReadPathUtil.PathBean) string {
 				continue
 			}
 			for _, formMember := range form.Properties {
-				paramType := goTypeToDartType(formMember.VarType)
-				source += "required " + paramType + " " + formMember.LowerName() + ","
+				paramType := goTypeToSwiftType(formMember.VarType)
+				source += formMember.LowerName() + ": " + paramType + ","
 			}
 		} else {
-			paramType := goTypeToDartType(it.VarType)
-			source += "required " + paramType + " " + it.Name + ","
+			paramType := goTypeToSwiftType(it.VarType)
+			source += it.Name + ": " + paramType + ","
 		}
 	}
 	if source != "" {
-		source = "{" + source[:len(source)-1] + "}"
+		source = source[:len(source)-1]
 	}
 	return source
 }
 
 // 生成发起网络请求部分代码
 func makeCallHttpSource(pb ReadPathUtil.PathBean) string {
-	source := ""
+	parameterSource := ""
 	for _, it := range pb.Parameters {
 		if strings.HasSuffix(it.VarType, "Form") { //如果这是个Form表单,则挨个解析表单内全部标量
 			form, isExists := ReadFormUtil.FormMap[it.PackagePath+"/"+it.VarType]
@@ -107,49 +116,28 @@ func makeCallHttpSource(pb ReadPathUtil.PathBean) string {
 				continue
 			}
 			for _, formMember := range form.Properties {
-				source += ".add(\"" + formMember.LowerName() + "\"," + formMember.LowerName() + ")"
+				parameterSource += "\"" + formMember.LowerName() + "\":" + formMember.LowerName() + ","
 			}
 		} else {
-			source += ".add(\"" + it.Name + "\"," + it.Name + ")"
+			parameterSource += "\"" + it.Name + "\":" + it.Name + ","
 		}
+	}
+	if len(parameterSource) > 0 {
+		parameterSource = parameterSource[:len(parameterSource)-1]
+		parameterSource = ",parameter: [" + parameterSource + "]"
 	}
 	constName := urlToConst(pb)
 	returnSource := makeReturnTypeSource(pb)
-	toModelSource := makeToModelSource(pb) //转换Model对象的代码
-	source = "    return " + returnSource + "(Api." + constName + toModelSource + ")" + source + ";"
-	return source
+	return "    return " + returnSource + "(ApiConst." + constName + parameterSource + ")"
 }
 
 // 生成返回值类型的代码
 func makeReturnTypeSource(pb ReadPathUtil.PathBean) string {
-	returnType := goTypeToDartType(pb.ReturnType)
-	if returnType == "" {
-		importList["import '../util/http/VoidApiHttp.dart';"] = struct{}{}
-		return "VoidApiHttp"
-	} else {
-		importList["import '../util/http/ReturnApiHttp.dart';"] = struct{}{}
-		return "ReturnApiHttp<" + returnType + ">"
+	returnType := goTypeToSwiftType(pb.ReturnType)
+	if len(returnType) == 0 {
+		returnType = "EmptyModel"
 	}
-}
-
-// 生成转换成model对象的代码
-func makeToModelSource(pb ReadPathUtil.PathBean) string {
-	returnType := goTypeToDartType(pb.ReturnType)
-	if returnType == "" {
-		return ""
-	}
-	if strings.HasSuffix(returnType, "Model") {
-		return ", " + returnType + ".fromJson"
-	} else if strings.HasPrefix(returnType, "List<") {
-		tType := returnType[strings.Index(returnType, "<")+1 : strings.Index(returnType, ">")]
-		if strings.HasSuffix(tType, "Model") {
-			return ", " + tType + ".fromJsonList"
-		} else {
-			return ""
-		}
-	} else {
-		return ""
-	}
+	return "ApiHttp<" + returnType + ">"
 }
 
 // 生成注释部分的代码
@@ -163,39 +151,47 @@ func makeComment(pb ReadPathUtil.PathBean) string {
 }
 
 // go数据类型转dart数据类型
-func goTypeToDartType(varType string) string {
-	dartType := ""
+func goTypeToSwiftType(varType string) string {
+	swiftType := ""
 	switch varType {
-	case "int", "int8", "int16", "int32", "int64":
-		dartType = "int"
+	case "int":
+		swiftType = "Int"
+	case "int8":
+		swiftType = "Int8"
+	case "int16":
+		swiftType = "Int16"
+	case "int32":
+		swiftType = "Int32"
+	case "int64":
+		swiftType = "Int64"
 	case "string":
-		dartType = "String"
+		swiftType = "String"
+	case "bool":
+		swiftType = "Bool"
 	case "any":
-		dartType = "Object"
-	case "error":
-		dartType = ""
+		swiftType = "String"
 	default:
-		listFormName := varType
-		if strings.HasPrefix(varType, "[]") {
+		if strings.HasPrefix(varType, "[]") { //这是一个List数据类型
 			listType := varType[2:]
-			listType = goTypeToDartType(listType)
-			dartType = "[" + listType + "]"
-		} else if strings.HasPrefix(varType, "map") { //这是一个map数据
+			listType = goTypeToSwiftType(listType)
+			swiftType = "[" + listType + "]"
+		} else if strings.HasPrefix(varType, "map[") { //这是一个Map数据类型
 			keyType := varType[strings.Index(varType, "[")+1 : strings.Index(varType, "]")]
 			valueType := varType[strings.Index(varType, "]")+1:]
-			dartType = "Map<" + goTypeToDartType(keyType) + "," + goTypeToDartType(valueType) + ">"
-		} else if strings.HasSuffix(varType, "Form") { //如果是以Form结尾的类名
-			if strings.Contains(listFormName, ".") { //只取点以后的字符串
-				listFormName = listFormName[strings.LastIndex(listFormName, ".")+1:]
-			}
-			listFormName = listFormName[:len(listFormName)-4] + "Model"
-			dartType = listFormName
-			importList["import 'model/"+listFormName+".dart';"] = struct{}{}
+
+			keyType = goTypeToSwiftType(keyType)
+			valueType = goTypeToSwiftType(valueType)
+			swiftType = "[" + keyType + " : " + valueType + "]"
+		} else if strings.Contains(varType, ".") { //这个返回的类型包含了包名
+			swiftType = varType[strings.LastIndex(varType, ".")+1:]
+			swiftType = goTypeToSwiftType(swiftType)
+		} else if strings.HasSuffix(varType, "Form") {
+			swiftType = varType[:len(varType)-4] + "Model"
 		} else {
-			dartType = listFormName
+			swiftType = varType
 		}
 	}
-	return dartType
+	return swiftType
 }
 
 // 将路由转成常量名
@@ -213,5 +209,5 @@ func urlToConst(pb ReadPathUtil.PathBean) string {
 
 // 保存文件
 func save(fileName string, source string) {
-	os.WriteFile(Application.Args.TargetDir+"/lib/api/"+fileName+".dart", []byte(source), 0644)
+	os.WriteFile(Application.Args.TargetDir+"/"+fileName+".swift", []byte(source), 0644)
 }
