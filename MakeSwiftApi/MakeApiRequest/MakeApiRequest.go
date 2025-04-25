@@ -30,7 +30,7 @@ func Make() {
 
 			source := ""
 			source += importStr
-			source += "\nstruct " + tempClassName + " {\n" + sourceBody + "}"
+			source += "\nenum " + tempClassName + " {\n" + sourceBody + "}"
 			save(tempClassName, source)
 			sourceBody = ""
 			importList = map[string]struct{}{}
