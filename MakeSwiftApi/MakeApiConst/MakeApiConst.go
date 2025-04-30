@@ -18,7 +18,7 @@ func Make() {
 		source += makeComment(it) + "\n"
 		source += "  static let " + urlToConst(it) + " = \"" + url + "\"\n"
 	}
-	source = "struct ApiConst{\n" + source + "}"
+	source = "enum ApiConst{\n" + source + "}"
 	save(source)
 }
 
