@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -46,7 +47,10 @@ func parseArgs() {
 		source = os.Args[0]
 		source = strings.ReplaceAll(source, "\\", "/")
 		source = source[:strings.LastIndex(source, "/")]
-		Args.SourceDir = source
+
+		//获取当前可执行文件的绝对路径
+		absPath, _ := filepath.Abs(source)
+		Args.SourceDir = absPath
 	}
 	argsElem := reflect.ValueOf(&Args).Elem()
 	for i := 0; i < len(os.Args); i++ {
