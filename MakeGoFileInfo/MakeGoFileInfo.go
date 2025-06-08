@@ -6,6 +6,7 @@ import (
 	"GoAutoWeb/MakeGoFileInfo/ReadAnnotationUtil"
 	"GoAutoWeb/MakeGoFileInfo/ReadMethodUtil"
 	"GoAutoWeb/MakeGoFileInfo/ReadStructUtil"
+	"fmt"
 	"strings"
 )
 
@@ -103,20 +104,48 @@ func readImport(lines []string) []string {
 	if importStartLineNo == -1 { //没有找到import
 		return nil
 	}
-	importStr := ""
-	for index := importStartLineNo; index < len(lines); index++ { //获取import部分的字符串
-		line := lines[index]
-		importStr += line + "\n"
-		if strings.Contains(line, ")") {
-			break
-		}
+	importSrc := strings.Join(lines, "\n")
+	importSrc = importSrc[strings.Index(importSrc, "import ")+7:]
+	importSrc = strings.TrimSpace(importSrc)
+	if strings.HasPrefix(importSrc, "(") { //这是一个多行Import
+		importSrc = importSrc[strings.Index(importSrc, "(")+1 : strings.Index(importSrc, ")")]
+	} else { //只有一个Import
+		importSrc = importSrc[strings.Index(importSrc, "\"")+1:]
+		importSrc = importSrc[:strings.Index(importSrc, "\"")]
+		importSrc = "\"" + importSrc + "\""
 	}
-	importStr = importStr[strings.Index(importStr, "(")+1 : strings.Index(importStr, ")")]
+	//
+	//importStr := lines[importStartLineNo]
+	//for index := importStartLineNo + 1; index < len(lines); index++ { //获取import部分的字符串
+	//	line := lines[index]
+	//	line = strings.TrimSpace(line)
+	//	if len(line) == 0 {
+	//		continue
+	//	}
+	//	if unicode.IsLetter([]rune(line)[0]) { //下一个代码块开始
+	//		break
+	//	}
+	//	if strings.HasPrefix(line, "/") { //注解
+	//		continue
+	//	}
+	//	if strings.HasPrefix(line, "*") { //注解
+	//		continue
+	//	}
+	//	importStr += line + "\n"
+	//}
+	//if strings.Contains(importStr, "(") {
+	//	importStr = importStr[strings.Index(importStr, "(")+1 : strings.Index(importStr, ")")]
+	//} else { //只有一个import时没有()
+	//	importStr = importStr[8:]
+	//}
 
 	imports := make([]string, 0)
-	for _, line := range strings.Split(importStr, "\n") {
+	for _, line := range strings.Split(importSrc, "\n") {
 		if !strings.Contains(line, "\"") {
 			continue
+		}
+		if strings.Index(line, "\"") == 0 && strings.LastIndex(line, "\"") == 0 {
+			fmt.Print("dfsf")
 		}
 
 		//取引号之间的字符串
