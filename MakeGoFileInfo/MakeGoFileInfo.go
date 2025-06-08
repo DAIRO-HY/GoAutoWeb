@@ -55,7 +55,7 @@ func Test(goList []Bean.GoBean) {
 // 读取Go代码信息
 func ReadGoInfo(path string) Bean.GoBean {
 	goBean := Bean.GoBean{}
-	goBean.Path = strings.ReplaceAll(path, "\\", "/")
+	goBean.FilePath = strings.ReplaceAll(path, "\\", "/")
 	goCode := FileUtil.ReadText(path)
 
 	//先统一换行符

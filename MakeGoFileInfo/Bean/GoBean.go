@@ -3,7 +3,7 @@ package Bean
 type GoBean struct {
 
 	//文件路径
-	Path string
+	FilePath string
 
 	//包名
 	Package string
