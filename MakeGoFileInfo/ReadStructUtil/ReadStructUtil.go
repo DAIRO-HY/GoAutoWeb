@@ -26,7 +26,7 @@ func Read(lines []string) []Bean.StructBean {
 			stt.Name = readStructNameByStartLineNo(lines, index)
 
 			//读取结构体注解
-			stt.Annotations = ReadAnnotationUtil.ReadAnnotationByTargetLineNo(lines, index)
+			stt.AnnotationMap = ReadAnnotationUtil.ReadAnnotationByTargetLineNo(lines, index)
 
 			//读取结构体注解
 			stt.Comment = ReadCommentUtil.Read(lines, index)
@@ -82,8 +82,8 @@ func readStructMemberByStartLineNo(lines []string, start int) []Bean.VariableBea
 		memberStrArr := strings.Split(line, " ")
 		member.Name = memberStrArr[0]
 		member.Type = strings.TrimSpace(memberStrArr[0])
-		member.Comment = ReadCommentUtil.Read(lines, i)                                //读取到注释
-		member.Annotations = ReadAnnotationUtil.ReadAnnotationByTargetLineNo(lines, i) //读取注解
+		member.Comment = ReadCommentUtil.Read(lines, i)                                  //读取到注释
+		member.AnnotationMap = ReadAnnotationUtil.ReadAnnotationByTargetLineNo(lines, i) //读取注解
 		members = append(members, member)
 	}
 	return members

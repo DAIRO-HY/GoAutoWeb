@@ -10,45 +10,45 @@ import (
 )
 
 func Test(goList []Bean.GoBean) {
-	for _, gb := range goList {
-		println("--------------------------------------------->Path:" + gb.Path)
-		println("-->Package:" + gb.Package)
-		for _, imt := range gb.Imports {
-			println("-->Import:" + imt)
-		}
-		for _, anno := range gb.Annotations {
-			println("-->Annotation.Name:@" + anno.Name)
-			for k, v := range anno.ValueMap {
-				println("-->Annotation.ValueMap." + k + "=" + v)
-			}
-		}
-		for _, mth := range gb.Methods {
-			println("-->Method.Name:" + mth.Name + "()")
-			println("-->Method.Comment:" + mth.Comment)
-			println("-->Method.Returns:" + strings.Join(mth.Returns, ","))
-			for _, anno := range mth.Annotations {
-				println("-->Method.Annotation:@" + anno.Name)
-			}
-			for _, param := range mth.Parameters {
-				println("-->Method.param:" + param.Name + " " + param.Type)
-			}
-		}
-
-		for _, stt := range gb.Structs {
-			println("-->Struct.Name:" + stt.Name + "{}")
-			println("-->Struct.Comment:" + stt.Comment)
-			for _, anno := range stt.Annotations {
-				println("-->Struct.Annotation:@" + anno.Name)
-			}
-			for _, mem := range stt.Members {
-				println("-->Struct.Members:" + mem.Name + " " + mem.Type)
-				println("-->Struct.Members.Comment:" + mem.Comment)
-				for _, anno := range stt.Annotations {
-					println("-->Struct.Members.Annotation:@" + anno.Name)
-				}
-			}
-		}
-	}
+	//for _, gb := range goList {
+	//	println("--------------------------------------------->Path:" + gb.Path)
+	//	println("-->Package:" + gb.Package)
+	//	for _, imt := range gb.Imports {
+	//		println("-->Import:" + imt)
+	//	}
+	//	for _, anno := range gb.Annotations {
+	//		println("-->Annotation.Name:@" + anno.Name)
+	//		for k, v := range anno.ValueMap {
+	//			println("-->Annotation.ValueMap." + k + "=" + v)
+	//		}
+	//	}
+	//	for _, mth := range gb.Methods {
+	//		println("-->Method.Name:" + mth.Name + "()")
+	//		println("-->Method.Comment:" + mth.Comment)
+	//		println("-->Method.Returns:" + strings.Join(mth.Returns, ","))
+	//		for _, anno := range mth.Annotations {
+	//			println("-->Method.Annotation:@" + anno.Name)
+	//		}
+	//		for _, param := range mth.Parameters {
+	//			println("-->Method.param:" + param.Name + " " + param.Type)
+	//		}
+	//	}
+	//
+	//	for _, stt := range gb.Structs {
+	//		println("-->Struct.Name:" + stt.Name + "{}")
+	//		println("-->Struct.Comment:" + stt.Comment)
+	//		for _, anno := range stt.Annotations {
+	//			println("-->Struct.Annotation:@" + anno.Name)
+	//		}
+	//		for _, mem := range stt.Members {
+	//			println("-->Struct.Members:" + mem.Name + " " + mem.Type)
+	//			println("-->Struct.Members.Comment:" + mem.Comment)
+	//			for _, anno := range stt.Annotations {
+	//				println("-->Struct.Members.Annotation:@" + anno.Name)
+	//			}
+	//		}
+	//	}
+	//}
 }
 
 // 读取Go代码信息
@@ -70,7 +70,7 @@ func ReadGoInfo(path string) Bean.GoBean {
 	goBean.Imports = readImport(lines)
 
 	// 读取go文件上的注解
-	goBean.Annotations = readAnnotation(lines)
+	goBean.AnnotationMap = readAnnotation(lines)
 
 	//读取go文件中的函数
 	goBean.Methods = ReadMethodUtil.Read(lines)
@@ -127,7 +127,7 @@ func readImport(lines []string) []string {
 }
 
 // 读取go文件上的注解
-func readAnnotation(lines []string) []Bean.AnnotationBean {
+func readAnnotation(lines []string) map[string]Bean.AnnotationBean {
 	for i, line := range lines { //寻找import开始行
 		if strings.HasPrefix(strings.TrimSpace(line), "package ") { //忽略换行
 			return ReadAnnotationUtil.ReadAnnotationByTargetLineNo(lines, i)

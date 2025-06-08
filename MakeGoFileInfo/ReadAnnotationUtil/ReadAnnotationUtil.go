@@ -38,8 +38,8 @@ func Read(line string) Bean.AnnotationBean {
 }
 
 // 读取指定行以上的注解
-func ReadAnnotationByTargetLineNo(lines []string, targetLineNo int) []Bean.AnnotationBean {
-	var annotations []Bean.AnnotationBean
+func ReadAnnotationByTargetLineNo(lines []string, targetLineNo int) map[string]Bean.AnnotationBean {
+	var annotationMap = make(map[string]Bean.AnnotationBean)
 	for index := targetLineNo - 1; index >= 0; index-- {
 		line := lines[index]
 		findLine := strings.ReplaceAll(line, " ", "")
@@ -61,7 +61,8 @@ func ReadAnnotationByTargetLineNo(lines []string, targetLineNo int) []Bean.Annot
 		}
 
 		//获取该行代码上的注解
-		annotations = append(annotations, Read(line))
+		annotation := Read(line)
+		annotationMap[annotation.Name] = annotation
 	}
-	return annotations
+	return annotationMap
 }

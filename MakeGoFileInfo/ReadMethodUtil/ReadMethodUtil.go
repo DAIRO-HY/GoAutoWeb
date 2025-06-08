@@ -24,7 +24,7 @@ func Read(lines []string) []Bean.MethodBean {
 		method := findMethodByStartLineNo(lines, index)
 
 		//读取函数的注解
-		method.Annotations = ReadAnnotationUtil.ReadAnnotationByTargetLineNo(lines, index)
+		method.AnnotationMap = ReadAnnotationUtil.ReadAnnotationByTargetLineNo(lines, index)
 
 		//读取指定行以上的注解
 		method.Comment = ReadCommentUtil.Read(lines, index)

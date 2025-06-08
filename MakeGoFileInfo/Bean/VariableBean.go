@@ -16,5 +16,5 @@ type VariableBean struct {
 	Value string
 
 	//注解
-	Annotations []AnnotationBean
+	AnnotationMap map[string]AnnotationBean
 }

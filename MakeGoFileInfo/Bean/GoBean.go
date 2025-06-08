@@ -18,5 +18,5 @@ type GoBean struct {
 	Methods []MethodBean
 
 	//注解列表
-	Annotations []AnnotationBean
+	AnnotationMap map[string]AnnotationBean
 }

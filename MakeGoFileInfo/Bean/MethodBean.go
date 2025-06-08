@@ -16,5 +16,5 @@ type MethodBean struct {
 	Parameters []VariableBean
 
 	//注解列表
-	Annotations []AnnotationBean
+	AnnotationMap map[string]AnnotationBean
 }

@@ -9,7 +9,7 @@ type StructBean struct {
 	Comment string
 
 	//注解
-	Annotations []AnnotationBean
+	AnnotationMap map[string]AnnotationBean
 
 	//成员变量
 	Members []VariableBean
