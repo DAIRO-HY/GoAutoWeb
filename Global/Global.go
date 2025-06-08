@@ -3,6 +3,8 @@ package Global
 import (
 	"GoAutoWeb/Application"
 	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/MakeGoFileInfo"
+	"GoAutoWeb/MakeGoFileInfo/Bean"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,6 +17,9 @@ var RootProject string
 // go代码文件列表
 var GoFileList []string
 
+// go代码信息列表
+var GoBeanList []Bean.GoBean
+
 // html模板文件列表
 var HtmlFileList []string
 
@@ -25,6 +30,9 @@ func Init() {
 	RootProject = Application.Args.SourceDir
 	readModuleName()
 	makeFileList()
+	for _, it := range GoFileList {
+		GoBeanList = append(GoBeanList, MakeGoFileInfo.ReadGoInfo(it))
+	}
 }
 
 // 读取项目的模块名
