@@ -34,11 +34,11 @@ func MappingBefore(path string) string {
 		}
 		isInterceptor := mappingInterceptor(path, interceptor.Include, interceptor.Exclude)
 		if isInterceptor { //匹配到了拦截器
-			afterSource := MappingAfter(path) //执行后拦截器
-			afterSource = strings.ReplaceAll(afterSource, "\t\t", "\t\t\t")
-			source += "\t\t\tif !" + interceptor.GetNickImport() + "." + interceptor.FuncName + "(writer, request) {\n\n"
-			source += "\t\t\t\t// 始终都要执行后的操作\n"
-			source += afterSource
+			//afterSource := MappingAfter(path) //执行后拦截器
+			//afterSource = strings.ReplaceAll(afterSource, "\t\t", "\t\t\t")
+			source += "\t\t\tif !" + interceptor.GetNickImport() + "." + interceptor.FuncName + "(writer, request) {\n"
+			//source += "\t\t\t\t// 始终都要执行后的操作\n"
+			//source += afterSource
 			source += "\t\t\t\treturn\n"
 			source += "\t\t\t}\n"
 		}

@@ -47,9 +47,9 @@ type PathBean struct {
 func (mine PathBean) MakeHandleSource() string {
 	source := ""
 	source += "\t\t\tvar body any = nil\n"
+	source += mine.makeDeferSource()                       // 生成最终执行代码
 	source += ReadInterceptorUtil.MappingBefore(mine.Path) // 执行前拦截器
 	source += mine.getControllerParamSource()              // 获取Controller参数部分的代码
-	source += mine.makeDeferSource()                       // 生成最终执行代码
 	source += mine.getCallMethodSource()                   // 生成调用函数部分的代码
 	//source += ReadInterceptorUtil.MappingAfter(mine.Path) // 执行后拦截器
 	//source += mine.makeWriteToSource()
