@@ -73,7 +73,7 @@ func readControllerPath(path string) FormBean {
 		validBean := readValidate(line)
 		if validBean != nil {
 			valids = append(valids, *validBean)
-		} else if line[0] >= 65 && line[0] <= 90 { //首字母是大写,判定这是一个属性
+		} else if line[0] >= 65 && line[0] <= 90 && strings.Contains(line, " ") { //首字母是大写,判定这是一个属性
 			property := readProperty(line)
 			property.valids = valids
 			property.Comment = comment
