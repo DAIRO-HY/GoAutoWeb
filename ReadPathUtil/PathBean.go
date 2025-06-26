@@ -154,7 +154,11 @@ func (mine PathBean) makeDeferSource() string {
 	return `
 			defer func() {
 				if panicErr := recover(); panicErr != nil { // 程序终止异常全局捕获
-					body = panicErr
+					if _, ok := panicErr.(error); ok { //如果本身是error
+						body = panicErr
+					} else { //如果不是error,则封装成error类型
+						body = &AutoWebError{Msg: panicErr}
+					}
 				}
 ` + afterSource + writeSource + `			}()
 `

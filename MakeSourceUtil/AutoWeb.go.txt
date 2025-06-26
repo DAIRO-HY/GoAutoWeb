@@ -523,3 +523,13 @@ func intP(i int) *int {
 func floatP(f float64) *float64 {
 	return &f
 }
+
+// 定义一个自定义错误类型
+type AutoWebError struct {
+	Msg any
+}
+
+// 实现 error 接口中的 Error() 方法
+func (e *AutoWebError) Error() string {
+	return fmt.Sprint(e.Msg)
+}
