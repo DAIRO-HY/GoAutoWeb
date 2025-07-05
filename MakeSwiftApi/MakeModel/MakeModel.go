@@ -2,9 +2,10 @@ package MakeModel
 
 import (
 	"GoAutoWeb/Application"
-	"GoAutoWeb/ReadFormUtil"
+	"GoAutoWeb/FileUtil"
+	"GoAutoWeb/Global"
+	"GoAutoWeb/MakeGoFileInfo/GoBean"
 	"encoding/json"
-	"os"
 	"strings"
 )
 
@@ -13,26 +14,31 @@ var importMap = make(map[string]struct{})
 
 // 生成Model类文件
 func Make() {
-	jsonData, _ := json.Marshal(ReadFormUtil.FormList)
+	jsonData, _ := json.Marshal(Global.GoClassList)
 
 	// 复制一个对象操作，避免指针操作修改到原始数据
-	copyList := make([]ReadFormUtil.FormBean, 0)
+	copyList := make([]GoBean.GoClass, 0)
 	json.Unmarshal(jsonData, &copyList)
-	for _, it := range copyList {
-		makeModelByForm(it)
+	for _, goClass := range copyList {
+		for _, goStruct := range goClass.Structs {
+			if !strings.HasSuffix(goStruct.Name, "Form") {
+				continue
+			}
+			makeModelByForm(goStruct)
+		}
 	}
 }
 
 // 通过一个Form表单生成Model文件
-func makeModelByForm(form ReadFormUtil.FormBean) {
+func makeModelByForm(goStruct GoBean.GoStruct) {
 
 	//修改类名
-	form.Name = form.Name[0:len(form.Name)-4] + "Model"
-	body := makeVarBodySource(form) // + makeConstructorSource(form)
+	goStruct.Name = goStruct.Name[0:len(goStruct.Name)-4] + "Model"
+	body := makeVarBodySource(goStruct) // + makeConstructorSource(form)
 	source := `/*工具自动生成代码,请勿手动修改*/
-struct ` + form.Name + ` : Codable {
+struct ` + goStruct.Name + ` : Codable {
 ` + body + "}\n"
-	save(source, form.Name)
+	save(source, goStruct.Name)
 	importMap = make(map[string]struct{})
 }
 
@@ -75,10 +81,10 @@ func goTypeToSwiftType(varType string) string {
 }
 
 // 生成变量定义部分的代码
-func makeVarBodySource(form ReadFormUtil.FormBean) string {
+func makeVarBodySource(goStruct GoBean.GoStruct) string {
 	source := ""
-	for _, it := range form.Properties {
-		source += "\n  " + it.Comment + "  var " + it.LowerName() + ": " + goTypeToSwiftType(it.VarType) + "\n"
+	for _, it := range goStruct.Members {
+		source += "\n  " + it.Comment + "  var " + it.LowerName() + ": " + goTypeToSwiftType(it.Type) + "\n"
 	}
 	return source + "\n"
 }
@@ -95,5 +101,10 @@ func makeVarBodySource(form ReadFormUtil.FormBean) string {
 
 // 保存文件
 func save(source string, fileName string) {
-	os.WriteFile(Application.Args.TargetDir+"/Model/"+fileName+".swift", []byte(source), 0644)
+	path := Application.Args.TargetDir + "/Model/" + fileName + ".swift"
+	fileContent := FileUtil.ReadText(path)
+	if fileContent == source {
+		return
+	}
+	FileUtil.WriteText(path, source)
 }

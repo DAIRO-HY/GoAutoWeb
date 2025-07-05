@@ -9,17 +9,18 @@ import (
 
 // 生成API常量文件
 func Make() {
-	source := ""
+	body := ""
 	for _, it := range ReadPathUtil.PathList {
 		if !strings.HasSuffix(it.FileName, Application.Args.ApiSuffix+".go") {
 			continue
 		}
 		url := it.Path + it.VariablePath
-		source += makeComment(it) + "\n"
-		source += "  static let " + urlToConst(it) + " = \"" + url + "\"\n"
+		body += makeComment(it) + "\n"
+		body += "  const val " + urlToConst(it) + " = \"" + url + "\"\n"
 	}
-	source = "enum ApiConst{\n" + source + "}"
-	save(source)
+	classSource := "package " + Application.Args.TargetPackage + "\n"
+	classSource += "object ApiConst{\n" + body + "}"
+	save(classSource)
 }
 
 // 生成注释部分的代码
@@ -47,7 +48,7 @@ func urlToConst(pb ReadPathUtil.PathBean) string {
 
 // 保存文件
 func save(source string) {
-	path := Application.Args.TargetDir + "/ApiConst.swift"
+	path := Application.Args.TargetDir + "/ApiConst.kt"
 	fileContent := FileUtil.ReadText(path)
 	if fileContent == source {
 		return

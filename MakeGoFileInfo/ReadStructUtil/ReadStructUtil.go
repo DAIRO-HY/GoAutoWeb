@@ -1,7 +1,7 @@
 package ReadStructUtil
 
 import (
-	"GoAutoWeb/MakeGoFileInfo/Bean"
+	"GoAutoWeb/MakeGoFileInfo/GoBean"
 	"GoAutoWeb/MakeGoFileInfo/ReadAnnotationUtil"
 	"GoAutoWeb/MakeGoFileInfo/ReadCommentUtil"
 	"strings"
@@ -9,8 +9,8 @@ import (
 )
 
 // 读取go文件中的函数
-func Read(lines []string) []Bean.StructBean {
-	var stts []Bean.StructBean
+func Read(lines []string) []GoBean.GoStruct {
+	var stts []GoBean.GoStruct
 	index := -1
 	for {
 		index++
@@ -20,7 +20,7 @@ func Read(lines []string) []Bean.StructBean {
 		line := lines[index]
 		findLine := strings.TrimSpace(line)
 		if strings.HasPrefix(findLine, "type ") && strings.Contains(findLine, " struct") { //这是一个结构体开始
-			stt := Bean.StructBean{}
+			stt := GoBean.GoStruct{}
 
 			//读取结构体名
 			stt.Name = readStructNameByStartLineNo(lines, index)
@@ -64,8 +64,8 @@ func readStructNameByStartLineNo(lines []string, start int) string {
 }
 
 // 读取成员变量
-func readStructMemberByStartLineNo(lines []string, start int) []Bean.VariableBean {
-	var members []Bean.VariableBean
+func readStructMemberByStartLineNo(lines []string, start int) []GoBean.GoVariable {
+	var members []GoBean.GoVariable
 
 	//结构体结束行
 	structEndLineNo := findStructEndLineNo(lines, start)
@@ -78,10 +78,10 @@ func readStructMemberByStartLineNo(lines []string, start int) []Bean.VariableBea
 		if !unicode.IsLetter([]rune(line)[0]) { // 如果第一个字符是字母,则代表这是一个变量）
 			continue
 		}
-		member := Bean.VariableBean{}
+		member := GoBean.GoVariable{}
 		memberStrArr := strings.Split(line, " ")
 		member.Name = memberStrArr[0]
-		member.Type = strings.TrimSpace(memberStrArr[0])
+		member.Type = strings.TrimSpace(memberStrArr[1])
 		member.Comment = ReadCommentUtil.Read(lines, i)                                  //读取到注释
 		member.AnnotationMap = ReadAnnotationUtil.ReadAnnotationByTargetLineNo(lines, i) //读取注解
 		members = append(members, member)

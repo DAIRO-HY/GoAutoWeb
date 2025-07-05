@@ -1,15 +1,15 @@
 package ReadMethodUtil
 
 import (
-	"GoAutoWeb/MakeGoFileInfo/Bean"
+	"GoAutoWeb/MakeGoFileInfo/GoBean"
 	"GoAutoWeb/MakeGoFileInfo/ReadAnnotationUtil"
 	"GoAutoWeb/MakeGoFileInfo/ReadCommentUtil"
 	"strings"
 )
 
 // 读取go文件中的函数
-func Read(lines []string) []Bean.MethodBean {
-	var methods []Bean.MethodBean
+func Read(lines []string) []GoBean.GoMethod {
+	var methods []GoBean.GoMethod
 	index := -1
 	for {
 		index++
@@ -37,8 +37,8 @@ func Read(lines []string) []Bean.MethodBean {
 }
 
 // 获取函数信息
-func findMethodByStartLineNo(lines []string, start int) Bean.MethodBean {
-	method := Bean.MethodBean{}
+func findMethodByStartLineNo(lines []string, start int) GoBean.GoMethod {
+	method := GoBean.GoMethod{}
 
 	//带有函数信息的字符串
 	methodInfoStr := ""
@@ -76,13 +76,13 @@ func findMethodByStartLineNo(lines []string, start int) Bean.MethodBean {
 
 	}
 	method.Name = name
-	var parameters []Bean.VariableBean
+	var parameters []GoBean.GoVariable
 	for _, it := range strings.Split(parameterStr, ",") {
 		it = strings.TrimSpace(it)
 		if len(it) == 0 {
 			continue
 		}
-		param := Bean.VariableBean{}
+		param := GoBean.GoVariable{}
 		param.Name = it[:strings.Index(it, " ")]
 		param.Type = it[strings.Index(it, " "):]
 		param.Type = strings.TrimSpace(param.Type)

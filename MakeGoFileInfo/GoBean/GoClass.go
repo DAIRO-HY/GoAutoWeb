@@ -1,6 +1,6 @@
-package Bean
+package GoBean
 
-type GoBean struct {
+type GoClass struct {
 
 	//文件路径
 	FilePath string
@@ -12,11 +12,11 @@ type GoBean struct {
 	Imports []string
 
 	//结构体列表
-	Structs []StructBean
+	Structs []GoStruct
 
 	//函数列表
-	Methods []MethodBean
+	Methods []GoMethod
 
 	//注解列表
-	AnnotationMap map[string]AnnotationBean
+	AnnotationMap map[string]GoAnnotation
 }

@@ -4,6 +4,7 @@ import (
 	"GoAutoWeb/Application"
 	"GoAutoWeb/Global"
 	"GoAutoWeb/MakeFlutterApi"
+	"GoAutoWeb/MakeKotlinApi"
 	"GoAutoWeb/MakeSourceUtil"
 	"GoAutoWeb/MakeSwiftApi"
 	"GoAutoWeb/ReadFormUtil"
@@ -57,6 +58,8 @@ func main() {
 		MakeFlutterApi.Make()
 	} else if Application.Args.TargetType == "swift-api" {
 		MakeSwiftApi.Make()
+	} else if Application.Args.TargetType == "kotlin-api" {
+		MakeKotlinApi.Make()
 	} else {
 
 	}

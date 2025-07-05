@@ -23,14 +23,14 @@ func Make() {
 		}
 		className := strings.ReplaceAll(it.FileName, Application.Args.ApiSuffix+".go", "Api")
 		if tempClassName != "" && tempClassName != className { //上一个文件的代码生成完成，先保存
-			importStr := ""
+			importStr := "import cn.dairo.music.farming.api.http.ApiHttp\n"
 			for im := range importList {
-				importStr += im + "\n"
+				importStr += "import " + im + "\n"
 			}
 
-			source := ""
+			source := "package " + Application.Args.TargetPackage + "\n\n"
 			source += importStr
-			source += "\nenum " + tempClassName + " {\n" + sourceBody + "}"
+			source += "\nobject " + tempClassName + " {\n" + sourceBody + "}"
 			save(tempClassName, source)
 			sourceBody = ""
 			importList = map[string]struct{}{}
@@ -43,7 +43,7 @@ func Make() {
 		returnType := makeReturnTypeSource(it)
 		comment := makeComment(it)
 		sourceBody += comment
-		sourceBody += "\n  static func " + makeFuncName(it.LowerFuncName()) + "(" + callParamSource + ") -> " + returnType + "{\n" + callApiHttp + "\n  }\n"
+		sourceBody += "\n  fun " + makeFuncName(it.LowerFuncName()) + "(" + callParamSource + ") : " + returnType + "{\n" + callApiHttp + "\n  }\n"
 	}
 }
 
@@ -92,11 +92,11 @@ func makeParamSource(pb ReadPathUtil.PathBean) string {
 				continue
 			}
 			for _, formMember := range form.Properties {
-				paramType := goTypeToSwiftType(formMember.VarType)
+				paramType := goTypeToKotlinType(formMember.VarType)
 				source += formMember.LowerName() + ": " + paramType + ","
 			}
 		} else {
-			paramType := goTypeToSwiftType(it.VarType)
+			paramType := goTypeToKotlinType(it.VarType)
 			source += it.Name + ": " + paramType + ","
 		}
 	}
@@ -116,26 +116,36 @@ func makeCallHttpSource(pb ReadPathUtil.PathBean) string {
 				continue
 			}
 			for _, formMember := range form.Properties {
-				parameterSource += "\"" + formMember.LowerName() + "\":" + formMember.LowerName() + ","
+				parameterSource += "\"" + formMember.LowerName() + "\" to " + formMember.LowerName() + ","
 			}
 		} else {
-			parameterSource += "\"" + it.Name + "\":" + it.Name + ","
+			parameterSource += "\"" + it.Name + "\" to " + it.Name + ","
 		}
 	}
 	if len(parameterSource) > 0 {
 		parameterSource = parameterSource[:len(parameterSource)-1]
-		parameterSource = ",parameter: [" + parameterSource + "]"
+		parameterSource = ",parameter = mapOf(" + parameterSource + ")"
 	}
+	returnCls := ""
+	if len(pb.ReturnType) > 0 { //如果有返回值
+		returnType := goTypeToKotlinType(pb.ReturnType)
+		if strings.HasPrefix(returnType, "List<") { //这是一个列表返回值
+			returnType = returnType[5 : len(returnType)-1]
+			returnCls = ", listCls = " + returnType + "::class.java"
+		} else {
+			returnCls = ", cls = " + returnType + "::class.java"
+		}
+	}
+
 	constName := urlToConst(pb)
-	returnSource := makeReturnTypeSource(pb)
-	return "    return " + returnSource + "(ApiConst." + constName + parameterSource + ")"
+	return "    return ApiHttp(ApiConst." + constName + parameterSource + returnCls + ")"
 }
 
 // 生成返回值类型的代码
 func makeReturnTypeSource(pb ReadPathUtil.PathBean) string {
-	returnType := goTypeToSwiftType(pb.ReturnType)
+	returnType := goTypeToKotlinType(pb.ReturnType)
 	if len(returnType) == 0 {
-		returnType = "EmptyModel"
+		returnType = "Void"
 	}
 	return "ApiHttp<" + returnType + ">"
 }
@@ -151,47 +161,57 @@ func makeComment(pb ReadPathUtil.PathBean) string {
 }
 
 // go数据类型转dart数据类型
-func goTypeToSwiftType(varType string) string {
-	swiftType := ""
+func goTypeToKotlinType(varType string) string {
 	switch varType {
 	case "int":
-		swiftType = "Int"
+		return "Int"
 	case "int8":
-		swiftType = "Int8"
+		return "Byte"
 	case "int16":
-		swiftType = "Int16"
+		return "Short"
 	case "int32":
-		swiftType = "Int32"
+		return "Int"
 	case "int64":
-		swiftType = "Int64"
+		return "Long"
+	case "float32":
+		return "Float"
+	case "float64":
+		return "Double"
 	case "string":
-		swiftType = "String"
+		return "String"
 	case "bool":
-		swiftType = "Bool"
+		return "Boolean"
+	case "time.Time":
+		return "String"
 	case "any":
-		swiftType = "String"
+		return "Any"
 	default:
+		kotlinType := ""
 		if strings.HasPrefix(varType, "[]") { //这是一个List数据类型
 			listType := varType[2:]
-			listType = goTypeToSwiftType(listType)
-			swiftType = "[" + listType + "]"
+			listType = goTypeToKotlinType(listType)
+			kotlinType = "List<" + listType + ">"
 		} else if strings.HasPrefix(varType, "map[") { //这是一个Map数据类型
 			keyType := varType[strings.Index(varType, "[")+1 : strings.Index(varType, "]")]
 			valueType := varType[strings.Index(varType, "]")+1:]
 
-			keyType = goTypeToSwiftType(keyType)
-			valueType = goTypeToSwiftType(valueType)
-			swiftType = "[" + keyType + " : " + valueType + "]"
+			keyType = goTypeToKotlinType(keyType)
+			valueType = goTypeToKotlinType(valueType)
+			kotlinType = "[" + keyType + " : " + valueType + "]"
 		} else if strings.Contains(varType, ".") { //这个返回的类型包含了包名
-			swiftType = varType[strings.LastIndex(varType, ".")+1:]
-			swiftType = goTypeToSwiftType(swiftType)
+			kotlinType = varType[strings.LastIndex(varType, ".")+1:]
+			kotlinType = goTypeToKotlinType(kotlinType)
 		} else if strings.HasSuffix(varType, "Form") {
-			swiftType = varType[:len(varType)-4] + "Model"
+			kotlinType = varType[:len(varType)-4] + "Model"
+			importList[Application.Args.TargetPackage+".model."+kotlinType] = struct{}{}
+		} else if varType == "" {
+			return ""
 		} else {
-			swiftType = varType
+			importList[Application.Args.TargetPackage+".model."+varType] = struct{}{}
+			return varType
 		}
+		return kotlinType
 	}
-	return swiftType
 }
 
 // 将路由转成常量名
@@ -209,7 +229,7 @@ func urlToConst(pb ReadPathUtil.PathBean) string {
 
 // 保存文件
 func save(fileName string, source string) {
-	path := Application.Args.TargetDir + "/" + fileName + ".swift"
+	path := Application.Args.TargetDir + "/" + fileName + ".kt"
 	fileContent := FileUtil.ReadText(path)
 	if fileContent == source {
 		return

@@ -28,6 +28,9 @@ type appArgs struct {
 
 	// 要生成Api文件的后缀
 	ApiSuffix string
+
+	// 目标代码所在包名(生成kotlin代码时用到)
+	TargetPackage string
 }
 
 func Init() {

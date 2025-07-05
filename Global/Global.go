@@ -4,7 +4,7 @@ import (
 	"GoAutoWeb/Application"
 	"GoAutoWeb/FileUtil"
 	"GoAutoWeb/MakeGoFileInfo"
-	"GoAutoWeb/MakeGoFileInfo/Bean"
+	"GoAutoWeb/MakeGoFileInfo/GoBean"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,7 +18,7 @@ var RootProject string
 var GoFileList []string
 
 // go代码信息列表
-var GoBeanList []Bean.GoBean
+var GoClassList []GoBean.GoClass
 
 // html模板文件列表
 var HtmlFileList []string
@@ -31,7 +31,7 @@ func Init() {
 	readModuleName()
 	makeFileList()
 	for _, it := range GoFileList {
-		GoBeanList = append(GoBeanList, MakeGoFileInfo.ReadGoInfo(it))
+		GoClassList = append(GoClassList, MakeGoFileInfo.ReadGoInfo(it))
 	}
 }
 

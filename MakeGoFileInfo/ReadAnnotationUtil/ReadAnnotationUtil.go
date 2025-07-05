@@ -1,15 +1,15 @@
 package ReadAnnotationUtil
 
 import (
-	"GoAutoWeb/MakeGoFileInfo/Bean"
+	"GoAutoWeb/MakeGoFileInfo/GoBean"
 	"strings"
 	"unicode"
 )
 
 // 获取某行代码上的注解
-func Read(line string) Bean.AnnotationBean {
+func Read(line string) GoBean.GoAnnotation {
 	line = strings.TrimSpace(line)
-	annotation := Bean.AnnotationBean{}
+	annotation := GoBean.GoAnnotation{}
 	if !strings.HasSuffix(line, ")") { //没有参数
 		name := line[strings.Index(line, "@")+1:]
 		name = strings.TrimSpace(name)
@@ -38,8 +38,8 @@ func Read(line string) Bean.AnnotationBean {
 }
 
 // 读取指定行以上的注解
-func ReadAnnotationByTargetLineNo(lines []string, targetLineNo int) map[string]Bean.AnnotationBean {
-	var annotationMap = make(map[string]Bean.AnnotationBean)
+func ReadAnnotationByTargetLineNo(lines []string, targetLineNo int) map[string]GoBean.GoAnnotation {
+	var annotationMap = make(map[string]GoBean.GoAnnotation)
 	for index := targetLineNo - 1; index >= 0; index-- {
 		line := lines[index]
 		findLine := strings.ReplaceAll(line, " ", "")

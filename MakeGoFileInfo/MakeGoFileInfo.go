@@ -2,7 +2,7 @@ package MakeGoFileInfo
 
 import (
 	"GoAutoWeb/FileUtil"
-	"GoAutoWeb/MakeGoFileInfo/Bean"
+	"GoAutoWeb/MakeGoFileInfo/GoBean"
 	"GoAutoWeb/MakeGoFileInfo/ReadAnnotationUtil"
 	"GoAutoWeb/MakeGoFileInfo/ReadMethodUtil"
 	"GoAutoWeb/MakeGoFileInfo/ReadStructUtil"
@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func Test(goList []Bean.GoBean) {
+func Test(goList []GoBean.GoClass) {
 	//for _, gb := range goList {
 	//	println("--------------------------------------------->Path:" + gb.Path)
 	//	println("-->Package:" + gb.Package)
@@ -53,8 +53,8 @@ func Test(goList []Bean.GoBean) {
 }
 
 // 读取Go代码信息
-func ReadGoInfo(path string) Bean.GoBean {
-	goBean := Bean.GoBean{}
+func ReadGoInfo(path string) GoBean.GoClass {
+	goBean := GoBean.GoClass{}
 	goBean.FilePath = strings.ReplaceAll(path, "\\", "/")
 	goCode := FileUtil.ReadText(path)
 
@@ -156,7 +156,7 @@ func readImport(lines []string) []string {
 }
 
 // 读取go文件上的注解
-func readAnnotation(lines []string) map[string]Bean.AnnotationBean {
+func readAnnotation(lines []string) map[string]GoBean.GoAnnotation {
 	for i, line := range lines { //寻找import开始行
 		if strings.HasPrefix(strings.TrimSpace(line), "package ") { //忽略换行
 			return ReadAnnotationUtil.ReadAnnotationByTargetLineNo(lines, i)

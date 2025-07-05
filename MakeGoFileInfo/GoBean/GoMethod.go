@@ -1,7 +1,7 @@
-package Bean
+package GoBean
 
 // go函数信息
-type MethodBean struct {
+type GoMethod struct {
 
 	//函数名
 	Name string
@@ -13,8 +13,8 @@ type MethodBean struct {
 	Comment string
 
 	//函数参数列表
-	Parameters []VariableBean
+	Parameters []GoVariable
 
 	//注解列表
-	AnnotationMap map[string]AnnotationBean
+	AnnotationMap map[string]GoAnnotation
 }
