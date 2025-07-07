@@ -23,7 +23,7 @@ func Make() {
 		}
 		className := strings.ReplaceAll(it.FileName, Application.Args.ApiSuffix+".go", "Api")
 		if tempClassName != "" && tempClassName != className { //上一个文件的代码生成完成，先保存
-			importStr := "import cn.dairo.music.farming.api.http.ApiHttp\n"
+			importStr := "import " + Application.Args.TargetPackage + ".http.ApiHttp\n"
 			for im := range importList {
 				importStr += "import " + im + "\n"
 			}
@@ -145,7 +145,7 @@ func makeCallHttpSource(pb ReadPathUtil.PathBean) string {
 func makeReturnTypeSource(pb ReadPathUtil.PathBean) string {
 	returnType := goTypeToKotlinType(pb.ReturnType)
 	if len(returnType) == 0 {
-		returnType = "Void"
+		returnType = "Unit"
 	}
 	return "ApiHttp<" + returnType + ">"
 }
