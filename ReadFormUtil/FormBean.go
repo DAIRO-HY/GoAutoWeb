@@ -54,8 +54,10 @@ func (mine *FormBean) MakeGetParameterSource(formStructName string, paramName st
 			callMethodName = "getFloat64Array"
 		} else if strings.HasSuffix(it.VarType, "bool") { //bool类型的变量
 			callMethodName = "getBoolArray"
-		} else { //字符串类型的变量
+		} else if strings.HasSuffix(it.VarType, "string") { //string类型的变量
 			callMethodName = "getStringArray"
+		} else {
+			continue
 		}
 		source += fmt.Sprintf("\t\t%s := %s(requestFormData, \"%s\")\n", paramName+it.Name, callMethodName, key)
 		source += fmt.Sprintf("\t\tif %s != nil {// 如果参数存在\n", paramName+it.Name)
