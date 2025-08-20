@@ -76,10 +76,20 @@ func getRequestFormData(request *http.Request) url.Values {
 // 获取string数组类型的参数
 func getStringArray(form url.Values, key string) []string {
 	value, isExists := form[key]
-	if isExists {
+	if !isExists {
+		return nil
+	}
+	if len(value) > 1 { //这本身是一个数组
 		return value
 	}
-	return nil
+	arrayValue := value[0]
+	if strings.HasPrefix(arrayValue, "[") && strings.HasSuffix(arrayValue, "]") { //这是一个另类数组
+
+		//去除首位[]
+		arrayValue = arrayValue[1 : len(arrayValue)-1]
+		return strings.Split(arrayValue, ",")
+	}
+	return value
 }
 
 // 获取int数组类型的参数
