@@ -122,6 +122,13 @@ func findMethodEndLineNo(lines []string, start int) int {
 	index := start
 	for {
 		line := lines[index]
+
+		//去掉前后空格
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "//") { //这行代码被注释了
+			index++
+			continue
+		}
 		for _, ch := range line { //遍历每个字符
 			if string(ch) == "{" {
 				startBlockCount++
